@@ -325,7 +325,7 @@ pgsql中使用：
 1.在调用链的最初需要指定数据库类型。<br>
 2.mysql最终生成的操作符取决于调用链的最后一次操作。
 
-**stringAgg：**
+**stringAgg：**<br>
 第一个参数为Query的子类型，为需要聚合的表达式；<br>
 第二个参数为String，为分隔符；<br>
 第三个参数为数据库类型；<br>
@@ -357,10 +357,10 @@ pgsql中使用：
     FROM table
 
 
-**arrayAgg：**
+**arrayAgg：**<br>
 使用方式同上，在pgsql中生成的sql为ARRAY_TO_STRING(ARRAY_AGG())形式。
 
-**jsonLength：**
+**jsonLength：**<br>
 第一个参数为Json调用链；<br>
 第二个参数为数据库类型。
 
@@ -388,7 +388,7 @@ pgsql中使用：
     SELECT JSONB_ARRAY_LENGTH(CAST(json_col AS JSONB) -> 0 -> 'objs')
     FROM table
 
-**findInSet：**
+**findInSet：**<br>
 第一个参数为Query的子类型或者String，为需要查询的表达式；<br>
 第二个参数为Query的子类型，为需要查询的集合；<br>
 第三个参数为数据库类型。
