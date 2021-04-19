@@ -395,21 +395,23 @@ pgsql中使用：
 
 例子：
 
-    val select = Select().from("table").select(findInSet("1", column("a"), DB.MYSQL)).sql()
+    val select = Select().from("table").where(findInSet("1", column("a"), DB.MYSQL)).sql()
 
 生成的sql语句：
 
-    SELECT FIND_IN_SET('1', a)
+    SELECT *
     FROM table
+    WHERE FIND_IN_SET('1', a)
 
 pgsql中使用：
 
-    val select = Select(DB.PGSQL).from("table").select(findInSet("1", column("a"), DB.PGSQL)).sql()
+    val select = Select(DB.PGSQL).from("table").where(findInSet("1", column("a"), DB.PGSQL)).sql()
 
 生成的sql语句：
 
-    SELECT CAST('1' AS VARCHAR) = ANY(STRING_TO_ARRAY(a, ','))
+    SELECT *
     FROM table
+    WHERE CAST('1' AS VARCHAR) = ANY(STRING_TO_ARRAY(a, ','))
 
 ## 结语：
 **此项目旨在为开发者提供一个流畅的sql构建工具，希望能帮助到使用此项目的开发者。**<br>
