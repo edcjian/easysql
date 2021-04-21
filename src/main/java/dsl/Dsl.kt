@@ -350,41 +350,26 @@ infix fun Query.le(query: SelectQuery): QueryBinary {
     return QueryBinary(this, "<=", QuerySub(query))
 }
 
-fun Query.json(value: Any, dbType: DB, operator: String = "->"): QueryJson {
-    val query = if (dbType == DB.PGSQL) {
-        cast(this, "JSONB")
-    } else {
-        this
+fun Query.json(value: Any, operator: String = "->"): QueryJson {
+    val chain = when (value) {
+        is Int -> "[$value]"
+        is String -> ".$value"
+        else -> throw TypeCastException("取Json值时，表达式右侧只支持String或Int")
     }
-
-    if (dbType == DB.MYSQL) {
-        val chain = when (value) {
-            is Int -> "[$value]"
-            is String -> ".$value"
-            else -> throw TypeCastException("取Json值时，表达式右侧只支持String或Int")
-        }
-        return QueryJson(query, operator, value, dbType, "$$chain")
-    }
-
-    return QueryJson(query, "->", value, dbType)
+    return QueryJson(this, this, operator, value, "$$chain")
 }
 
-fun Query.jsonText(value: Any, dbType: DB): QueryJson {
-    return json(value, dbType, "->>")
+fun Query.jsonText(value: Any): QueryJson {
+    return json(value, "->>")
 }
 
 fun QueryJson.json(value: Any, operator: String = "->"): QueryJson {
-    if (!this.chain.isNullOrEmpty()) {
-        if (this.db == DB.MYSQL) {
-            val chain = when (value) {
-                is Int -> "[$value]"
-                is String -> ".$value"
-                else -> throw TypeCastException("取Json值时，表达式右侧只支持String或Int")
-            }
-            return QueryJson(this.query, operator, value, this.db, "${this.chain}$chain")
-        }
+    val chain = when (value) {
+        is Int -> "[$value]"
+        is String -> ".$value"
+        else -> throw TypeCastException("取Json值时，表达式右侧只支持String或Int")
     }
-    return QueryJson(this, operator, value, this.db)
+    return QueryJson(this, this.initQuery, operator, value, "${this.chain}$chain")
 }
 
 fun QueryJson.jsonText(value: Any): QueryJson {
@@ -547,19 +532,20 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
         }
         is QueryJson -> {
             val operator = getBinaryOperator(query.operator)
-            when (query.db) {
+            when (dbType) {
                 DB.PGSQL -> {
                     val valueExpr = when (query.value) {
                         is Int -> SQLNumberExpr(query.value)
                         is String -> SQLCharExpr(query.value)
                         else -> throw TypeCastException("取Json值时，表达式右侧只支持String或Int")
                     }
-                    val expr = SQLBinaryOpExpr(getQueryExpr(query.query, dbType).expr, operator, valueExpr)
+                    val expr =
+                        SQLBinaryOpExpr(getQueryExpr(cast(query.query, "JSONB"), dbType).expr, operator, valueExpr)
                     QueryExpr(expr, query.alias)
                 }
                 DB.MYSQL -> {
                     val expr =
-                        SQLBinaryOpExpr(getQueryExpr(query.query, dbType).expr, operator, SQLCharExpr(query.chain))
+                        SQLBinaryOpExpr(getQueryExpr(query.initQuery, dbType).expr, operator, SQLCharExpr(query.chain))
                     QueryExpr(expr, query.alias)
                 }
                 else -> throw TypeCastException("Json操作暂不支持此数据库")

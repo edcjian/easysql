@@ -270,10 +270,13 @@ object TestSql {
 //        val select = Select().from(User).leftJoin(User1, on = User.id eq User1.id).sql()
 //        println(select)
 
-        val select = Select(DB.ORACLE).from(User).select(findInSet("1", User.name)).sql()
-        println(select)
+//        val select = Select(DB.ORACLE).from(User).select(findInSet("1", User.name)).sql()
+//        println(select)
 
 //        val select = Select(DB.PGSQL).from(User).select(ifNull(User.name, "")).sql()
 //        println(select)
+
+        val select = Select(DB.MYSQL).from(User).select(User.name.json("a").json(1).jsonText("b")).sql()
+        println(select)
     }
 }
