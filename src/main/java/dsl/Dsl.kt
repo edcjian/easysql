@@ -151,11 +151,7 @@ fun ifNull(query: Query, value: Query, dbType: DB): Query {
 }
 
 fun cast(query: Query, type: String): Query {
-    val dataType = SQLCharacterDataType(type)
-    val expr = SQLCastExpr()
-    expr.expr = getQueryExpr(query).expr
-    expr.dataType = dataType
-    return QueryExpr(expr)
+    return QueryCast(query, type)
 }
 
 fun stringAgg(
@@ -555,6 +551,13 @@ fun getQueryExpr(query: Query?): QueryExpr {
                 }
                 else -> throw TypeCastException("Json操作暂不支持此数据库")
             }
+        }
+        is QueryCast -> {
+            val dataType = SQLCharacterDataType(query.type)
+            val expr = SQLCastExpr()
+            expr.expr = getQueryExpr(query.query).expr
+            expr.dataType = dataType
+            QueryExpr(expr, query.alias)
         }
         else -> throw TypeCastException("未找到对应的查询类型")
     }

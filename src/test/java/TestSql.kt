@@ -188,12 +188,12 @@ object TestSql {
 //                .sql()
 //        println(select)
 
-        val case = case(User.gender eq 1 then User.gender) elseIs null
-        val select = Select()
-                .from(User)
-                .select(count(case) alias "male_count")
-                .sql()
-        println(select)
+//        val case = case(User.gender eq 1 then User.gender) elseIs null
+//        val select = Select()
+//                .from(User)
+//                .select(count(case) alias "male_count")
+//                .sql()
+//        println(select)
 
 //        val select = (Select().from("t1").select("a") union
 //                Select().from("t2").select("a") unionAll
@@ -268,5 +268,8 @@ object TestSql {
 
 //        val select = Select().from(User).leftJoin(User1, on = User.id eq User1.id).sql()
 //        println(select)
+
+        val select = Select().from(User).select(findInSet("1", User.name, DB.PGSQL)).sql()
+        println(select)
     }
 }
