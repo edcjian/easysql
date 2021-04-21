@@ -254,13 +254,13 @@ object TestSql {
 //                .sql()
 //        println(select)
 
-//        val select = Select()
-//                .from(User)
-//                .select(User.id + 1)
-//                .where((User.name like "%xxx%") or (User.name inList listOf("a", "b")) and (User.id gt 1))
-//                .orderByAsc(User.id)
-//                .sql()
-//        println(select)
+        val select = Select()
+                .from(User)
+                .select(User.id + 1)
+                .where((User.name like "%xxx%") or (User.name inList Select().from(User).select(User.name)) and (User.id gt 1))
+                .orderByAsc(User.id)
+                .sql()
+        println(select)
 
 //        val select = (Select().from(User).select(User.id alias "id") union
 //                Select().from(User).select(User.id alias "id")).sql()
@@ -269,7 +269,7 @@ object TestSql {
 //        val select = Select().from(User).leftJoin(User1, on = User.id eq User1.id).sql()
 //        println(select)
 
-        val select = Select().from(User).select(findInSet("1", User.name, DB.PGSQL)).sql()
-        println(select)
+//        val select = Select().from(User).select(findInSet("1", User.name, DB.PGSQL)).sql()
+//        println(select)
     }
 }

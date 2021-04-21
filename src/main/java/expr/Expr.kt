@@ -91,6 +91,20 @@ data class QueryJson(
 
 data class QueryCast(val query: Query, val type: String, override var alias: String? = null) : Query()
 
+data class QueryInList<T>(
+    val query: Query,
+    val list: List<T>,
+    val isNot: Boolean = false,
+    override var alias: String? = null
+) : Query()
+
+data class QueryInSubQuery(
+    val query: Query,
+    val subQuery: SelectQuery,
+    val isNot: Boolean = false,
+    override var alias: String? = null
+) : Query()
+
 data class CaseBranch<T>(val query: Query, val then: T)
 
 enum class DB {

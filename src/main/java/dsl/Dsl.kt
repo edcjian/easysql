@@ -260,6 +260,7 @@ fun jsonLength(query: Query, dbType: DB): Query {
     }
 }
 
+// FIXME 此处需要重写
 fun Query.orderBy(order: SQLOrderingSpecification = SQLOrderingSpecification.ASC): SQLOrderBy {
     val orderBy = SQLOrderBy()
     val expr = SQLSelectOrderByItem()
@@ -407,19 +408,11 @@ infix fun Query.notLike(query: String): QueryBinary {
 }
 
 fun <T> inList(query: Query, list: List<T>, isNot: Boolean = false): Query {
-    val expr = SQLInListExpr()
-    expr.isNot = isNot
-    expr.expr = getQueryExpr(query).expr
-    list.forEach { expr.addTarget(getExpr(it)) }
-    return QueryExpr(expr)
+    return QueryInList(query, list, isNot)
 }
 
 fun inList(query: Query, subQuery: SelectQuery, isNot: Boolean = false): Query {
-    val expr = SQLInSubQueryExpr()
-    expr.isNot = isNot
-    expr.expr = getQueryExpr(query).expr
-    expr.subQuery = SQLSelect(subQuery.getSelect())
-    return QueryExpr(expr)
+    return QueryInSubQuery(query, subQuery, isNot)
 }
 
 infix fun <T> Query.inList(query: List<T>): Query {
@@ -558,6 +551,20 @@ fun getQueryExpr(query: Query?): QueryExpr {
             expr.expr = getQueryExpr(query.query).expr
             expr.dataType = dataType
             QueryExpr(expr, query.alias)
+        }
+        is QueryInList<*> -> {
+            val expr = SQLInListExpr()
+            expr.isNot = query.isNot
+            expr.expr = getQueryExpr(query.query).expr
+            query.list.forEach { expr.addTarget(getExpr(it)) }
+            QueryExpr(expr)
+        }
+        is QueryInSubQuery -> {
+            val expr = SQLInSubQueryExpr()
+            expr.isNot = query.isNot
+            expr.expr = getQueryExpr(query.query).expr
+            expr.subQuery = SQLSelect(query.subQuery.getSelect())
+            QueryExpr(expr)
         }
         else -> throw TypeCastException("未找到对应的查询类型")
     }
