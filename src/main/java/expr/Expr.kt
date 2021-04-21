@@ -85,7 +85,7 @@ data class QueryJson(
         override var alias: String? = null
 ) : Query()
 
-data class CaseBranch<T>(val query: QueryExpr, val then: T)
+data class CaseBranch<T>(val query: Query, val then: T)
 
 enum class DB {
     MYSQL, ORACLE, PGSQL, HIVE

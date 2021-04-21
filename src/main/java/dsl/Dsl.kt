@@ -59,7 +59,7 @@ fun <T> value(value: T, alias: String): QueryConst<T> {
 }
 
 infix fun <T> QueryBinary.then(then: T): CaseBranch<T> {
-    return CaseBranch(getQueryExpr(this), then)
+    return CaseBranch(this, then)
 }
 
 fun <T> case(vararg conditions: CaseBranch<T>): QueryCase<T> {
@@ -159,11 +159,11 @@ fun cast(query: Query, type: String): Query {
 }
 
 fun stringAgg(
-        query: Query,
-        separator: String,
-        dbType: DB,
-        orderBy: SQLOrderBy? = null,
-        distinct: Boolean = false
+    query: Query,
+    separator: String,
+    dbType: DB,
+    orderBy: SQLOrderBy? = null,
+    distinct: Boolean = false
 ): Query {
     val distinctType = if (distinct) {
         SQLAggregateOption.DISTINCT
@@ -172,17 +172,17 @@ fun stringAgg(
     }
     return when (dbType) {
         DB.MYSQL -> QueryAggFunction(
-                "GROUP_CONCAT",
-                listOf(query),
-                attributes = mapOf("SEPARATOR" to const(separator)),
-                option = distinctType,
-                orderBy = orderBy
+            "GROUP_CONCAT",
+            listOf(query),
+            attributes = mapOf("SEPARATOR" to const(separator)),
+            option = distinctType,
+            orderBy = orderBy
         )
         DB.PGSQL -> QueryAggFunction(
-                "STRING_AGG",
-                listOf(cast(query, "VARCHAR"), const(separator)),
-                option = distinctType,
-                orderBy = orderBy
+            "STRING_AGG",
+            listOf(cast(query, "VARCHAR"), const(separator)),
+            option = distinctType,
+            orderBy = orderBy
         )
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
@@ -190,11 +190,11 @@ fun stringAgg(
 }
 
 fun arrayAgg(
-        query: Query,
-        separator: String,
-        dbType: DB,
-        orderBy: SQLOrderBy? = null,
-        distinct: Boolean = false
+    query: Query,
+    separator: String,
+    dbType: DB,
+    orderBy: SQLOrderBy? = null,
+    distinct: Boolean = false
 ): Query {
     val distinctType = if (distinct) {
         SQLAggregateOption.DISTINCT
@@ -203,22 +203,22 @@ fun arrayAgg(
     }
     return when (dbType) {
         DB.MYSQL -> QueryAggFunction(
-                "GROUP_CONCAT",
-                listOf(query),
-                attributes = mapOf("SEPARATOR" to const(separator)),
-                option = distinctType,
-                orderBy = orderBy
+            "GROUP_CONCAT",
+            listOf(query),
+            attributes = mapOf("SEPARATOR" to const(separator)),
+            option = distinctType,
+            orderBy = orderBy
         )
         DB.PGSQL -> QueryExprFunction(
-                "ARRAY_TO_STRING",
-                listOf(
-                        QueryAggFunction(
-                                "ARRAY_AGG",
-                                listOf(cast(query, "VARCHAR")),
-                                option = distinctType,
-                                orderBy = orderBy
-                        ), const(separator)
-                )
+            "ARRAY_TO_STRING",
+            listOf(
+                QueryAggFunction(
+                    "ARRAY_AGG",
+                    listOf(cast(query, "VARCHAR")),
+                    option = distinctType,
+                    orderBy = orderBy
+                ), const(separator)
+            )
         )
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
@@ -229,9 +229,9 @@ fun findInSet(value: Query, query: Query, dbType: DB): Query {
     return when (dbType) {
         DB.MYSQL -> QueryExprFunction("FIND_IN_SET", listOf(value, query))
         DB.PGSQL -> QueryBinary(
-                cast(value, "VARCHAR"),
-                "=",
-                QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query, const(",")))))
+            cast(value, "VARCHAR"),
+            "=",
+            QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query, const(",")))))
         )
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
@@ -519,7 +519,7 @@ fun getQueryExpr(query: Query?): QueryExpr {
         is QueryCase<*> -> {
             val expr = SQLCaseExpr()
             query.conditions.forEach {
-                expr.addItem(it.query.expr, getExpr(it.then))
+                expr.addItem(getQueryExpr(it.query).expr, getExpr(it.then))
             }
             expr.elseExpr = getExpr(query.default)
             QueryExpr(expr, query.alias)
