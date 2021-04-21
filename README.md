@@ -1,5 +1,6 @@
 ## 项目介绍
 本项目是一个使用Kotlin语言编写，基于阿里druid项目的sql解析模块构建的sql构建工具，可以使用链式调用构建较为复杂的跨数据库sql语句（目前支持mysql、pgsql、oracle、hive）。
+<br>本项目十分轻量级，除了kotlin基础库和druid支持外，没有任何库引用。
 <br>因为数据库增删改查语句中，SELECT语句最为复杂，所以此项目重点为SELECT语句的拼装。
 <br>**在此感谢温绍锦先生和他的团队开发出了如此优秀的跨数据库sql parser。**
 ## 快速开始
@@ -82,7 +83,7 @@
 
     val select = Select()
                 .from("table")
-                .select((column("a") + column("b")) / const(2) alias "col")
+                .select((column("a") + column("b")) / 2 alias "col")
                 .where((column("a") eq 1) and (column("b") eq 2))
                 .sql()
 
@@ -100,7 +101,7 @@
 
 3.支持以下逻辑运算符：eq(=)、ne(!=)、gt(>)、ge(>=)、lt(<)、le(<=)、and(AND)、or(OR)、xor(XOR)。<br>
 
-4.因为Kotlin不支持自定义运算符的优先级，所以在where中使用and、or等符号时，每一组条件都需要放在括号中（如果只是and条件，可以用多个where函数调用的方式）。<br>
+4.因为Kotlin不支持自定义运算符的优先级，所以在使用and、or等符号，或者运算符的右侧为常量时，每一组运算都需要放在括号中（如果只是and条件，可以用多个where函数调用的方式）。<br>
 
 5.Java调用中缀函数时，比如 a eq b，需要写成eq(a, b)。<br>
 
@@ -293,7 +294,39 @@ concatWs的第一个参数为分隔符的字符串，其他同concat。
 
 #### 实验性特性：
 
-此处为一些函数和Json操作，目前还只支持mysql和pgsql。
+**对象映射：**
+最新版本添加了完整的对象映射功能：<br>
+在实体类中添加Kotlin伴生对象，并继承TableSchema类，例如：
+    
+    data class User(val id: Long? = 1, val name: String? = null, val gender: Int? = 1) {
+        companion object : TableSchema("user") {
+            val id = column("id")
+            val name = column("user_name")
+            val gender = column("gender")
+        }
+    }
+    
+即可使用对象映射查询：
+
+    val select = Select()
+                .from(User)
+                .select(User.id + 1)
+                .where((User.name like "%xxx%") or (User.name inList listOf("a", "b")) and (User.id gt 1))
+                .orderByAsc(User.id)
+                .sql()
+
+生成的sql语句：
+
+    SELECT user.id + 1
+    FROM user
+    WHERE (user.user_name LIKE '%xxx%'
+    		OR user.user_name IN ('a', 'b'))
+    	AND user.id > 1
+    ORDER BY user.id ASC
+    
+join、子查询等功能也完整支持对象映射特性。<br>
+
+以下为一些函数和Json操作，目前还只支持mysql和pgsql。
 
 **获取Json：**
 
