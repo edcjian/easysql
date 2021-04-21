@@ -5,7 +5,7 @@ import select.Select
 object TestSql {
     @JvmStatic
     fun main(args: Array<String>) {
-        //        val sql = Select()
+//                val sql = Select()
 //            .from("table")
 //            .distinct()
 //            .select(
@@ -183,17 +183,17 @@ object TestSql {
 //        println(select)
 
 //        val select = Select()
-//                .from("user")
-//                .select(case(column("gender") eq 1 then "男", column("gender") eq 2 then "女") elseIs "其他" alias "gender")
+//                .from(User)
+//                .select(case(User.gender eq 1 then "男", User.gender eq 2 then "女") elseIs "其他" alias "gender")
 //                .sql()
 //        println(select)
 
-//        val case = case(column("gender") eq 1 then column("gender")) elseIs null
-//        val select = Select()
-//                .from("user")
-//                .select(count(case) alias "male_count")
-//                .sql()
-//        println(select)
+        val case = case(User.gender eq 1 then User.gender) elseIs null
+        val select = Select()
+                .from(User)
+                .select(count(case) alias "male_count")
+                .sql()
+        println(select)
 
 //        val select = (Select().from("t1").select("a") union
 //                Select().from("t2").select("a") unionAll

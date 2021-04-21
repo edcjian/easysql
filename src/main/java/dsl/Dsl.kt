@@ -622,6 +622,12 @@ fun <T> getExpr(value: T): SQLExpr {
             expr.name = value.column
             expr
         }
+        is QueryTableColumn ->{
+            val expr = SQLPropertyExpr()
+            expr.name = value.column
+            expr.owner = SQLIdentifierExpr(value.table)
+            expr
+        }
         else -> throw TypeCastException("未找到对应的数据类型")
     }
 }
