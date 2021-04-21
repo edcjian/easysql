@@ -96,13 +96,13 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     fun selectIfNull(query: Query, value: Query, alias: String? = null): Select {
-        var select = ifNull(query, value, this.dbType)
+        var select = ifNull(query, value)
         alias?.let { select = select alias it }
         return select(select)
     }
 
     fun <T> selectIfNull(query: Query, value: T, alias: String? = null): Select {
-        var select = ifNull(query, const(value), this.dbType)
+        var select = ifNull(query, const(value))
         alias?.let { select = select alias it }
         return select(select)
     }

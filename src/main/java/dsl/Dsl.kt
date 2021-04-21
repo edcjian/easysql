@@ -141,13 +141,12 @@ fun concatWs(separator: String, vararg query: Query): Query {
     return QueryExprFunction("CONCAT_WS", listOf<Query>(const(separator)) + query.toList())
 }
 
-fun ifNull(query: Query, value: Query, dbType: DB): Query {
-    return when (dbType) {
-        DB.MYSQL -> QueryExprFunction("IFNULL", listOf(query, value))
-        DB.PGSQL -> QueryExprFunction("COALESCE", listOf(query, value))
-        DB.ORACLE -> QueryExprFunction("NVL", listOf(query, value))
-        DB.HIVE -> QueryExprFunction("IF", listOf(query.isNull(), value, query))
-    }
+fun ifNull(query: Query, value: Query): Query {
+    return QueryExprFunction("*IFNULL", listOf(query, value))
+}
+
+fun <T> ifNull(query: Query, value: T): Query {
+    return ifNull(query, const(value))
 }
 
 fun cast(query: Query, type: String): Query {
@@ -221,21 +220,22 @@ fun arrayAgg(
     }
 }
 
-fun findInSet(value: Query, query: Query, dbType: DB): Query {
-    return when (dbType) {
-        DB.MYSQL -> QueryExprFunction("FIND_IN_SET", listOf(value, query))
-        DB.PGSQL -> QueryBinary(
-            cast(value, "VARCHAR"),
-            "=",
-            QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query, const(",")))))
-        )
-        // TODO
-        else -> throw TypeCastException("暂不支持该数据库使用此函数")
-    }
+fun findInSet(value: Query, query: Query): Query {
+//    return when (dbType) {
+//        DB.MYSQL -> QueryExprFunction("FIND_IN_SET", listOf(value, query))
+//        DB.PGSQL -> QueryBinary(
+//            cast(value, "VARCHAR"),
+//            "=",
+//            QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query, const(",")))))
+//        )
+//        // TODO
+//        else -> throw TypeCastException("暂不支持该数据库使用此函数")
+//    }
+    return QueryExprFunction("*FIND_IN_SET", listOf(value, query))
 }
 
-fun findInSet(value: String, query: Query, dbType: DB): Query {
-    return findInSet(const(value), query, dbType)
+fun findInSet(value: String, query: Query): Query {
+    return findInSet(const(value), query)
 }
 
 fun jsonLength(query: Query, dbType: DB): Query {
@@ -468,6 +468,14 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
             }
         }
         is QueryExprFunction -> {
+            if (query.name == "*IFNULL") {
+                return visitFunctionIfNull(query, dbType)
+            }
+
+            if (query.name == "*FIND_IN_SET") {
+                return visitFunctionFindInSet(query, dbType)
+            }
+
             val expr = SQLMethodInvokeExpr()
             expr.methodName = query.name
             if (query.args.isEmpty()) {
@@ -580,6 +588,31 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
         }
         else -> throw TypeCastException("未找到对应的查询类型")
     }
+}
+
+fun visitFunctionIfNull(query: QueryExprFunction, dbType: DB): QueryExpr {
+    val function = when (dbType) {
+        DB.MYSQL -> QueryExprFunction("IFNULL", listOf(query.args[0], query.args[1]))
+        DB.PGSQL -> QueryExprFunction("COALESCE", listOf(query.args[0], query.args[1]))
+        DB.ORACLE -> QueryExprFunction("NVL", listOf(query.args[0], query.args[1]))
+        DB.HIVE -> QueryExprFunction("IF", listOf(query.args[0].isNull(), query.args[1], query.args[0]))
+    }
+    return QueryExpr(getQueryExpr(function, dbType).expr, query.alias)
+}
+
+fun visitFunctionFindInSet(query: QueryExprFunction, dbType: DB): QueryExpr {
+    val function = when (dbType) {
+        DB.MYSQL -> QueryExprFunction("FIND_IN_SET", listOf(query.args[0], query.args[1]))
+        DB.PGSQL -> QueryBinary(
+            cast(query.args[0], "VARCHAR"),
+            "=",
+            QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query.args[1], const(",")))))
+        )
+        // TODO
+        else -> throw TypeCastException("暂不支持该数据库使用此函数")
+    }
+
+    return QueryExpr(getQueryExpr(function, dbType).expr, query.alias)
 }
 
 fun getBinaryOperator(operator: String): SQLBinaryOperator {
