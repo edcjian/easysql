@@ -264,7 +264,7 @@ fun jsonLength(query: Query, dbType: DB): Query {
 fun Query.orderBy(order: SQLOrderingSpecification = SQLOrderingSpecification.ASC): SQLOrderBy {
     val orderBy = SQLOrderBy()
     val expr = SQLSelectOrderByItem()
-    expr.expr = getQueryExpr(this).expr
+    expr.expr = getQueryExpr(this, DB.MYSQL).expr
     expr.type = order
     orderBy.addItem(expr)
     return orderBy
@@ -451,7 +451,7 @@ infix fun SelectQuery.unionAll(select: SelectQuery): SelectQuery {
     return UnionSelect(this, SQLUnionOperator.UNION_ALL, select, this.getDbType())
 }
 
-fun getQueryExpr(query: Query?): QueryExpr {
+fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
     return when (query) {
         null -> QueryExpr(SQLNullExpr())
         is QueryColumn -> {
@@ -473,7 +473,7 @@ fun getQueryExpr(query: Query?): QueryExpr {
             if (query.args.isEmpty()) {
                 expr.addArgument(SQLAllColumnExpr())
             } else {
-                query.args.map { getQueryExpr(it).expr }.forEach { expr.addArgument(it) }
+                query.args.map { getQueryExpr(it, dbType).expr }.forEach { expr.addArgument(it) }
             }
             QueryExpr(expr, query.alias)
         }
@@ -483,10 +483,10 @@ fun getQueryExpr(query: Query?): QueryExpr {
             if (query.args.isEmpty()) {
                 expr.addArgument(SQLAllColumnExpr())
             } else {
-                query.args.map { getQueryExpr(it).expr }.forEach { expr.addArgument(it) }
+                query.args.map { getQueryExpr(it, dbType).expr }.forEach { expr.addArgument(it) }
             }
             query.attributes?.let { attributes ->
-                attributes.forEach { (k, v) -> expr.putAttribute(k, getQueryExpr(v).expr) }
+                attributes.forEach { (k, v) -> expr.putAttribute(k, getQueryExpr(v, dbType).expr) }
             }
             query.orderBy?.let { expr.orderBy = it }
             QueryExpr(expr, query.alias)
@@ -494,9 +494,9 @@ fun getQueryExpr(query: Query?): QueryExpr {
         is QueryConst<*> -> QueryExpr(getExpr(query.value), query.alias)
         is QueryBinary -> {
             val expr = SQLBinaryOpExpr()
-            val left = getQueryExpr(query.left).expr
+            val left = getQueryExpr(query.left, dbType).expr
             val operator = getBinaryOperator(query.operator)
-            val right = getQueryExpr(query.right).expr
+            val right = getQueryExpr(query.right, dbType).expr
             expr.left = left
             expr.operator = operator
             expr.right = right
@@ -509,15 +509,15 @@ fun getQueryExpr(query: Query?): QueryExpr {
             val expr = SQLCaseExpr()
             query.conditions.forEach {
                 val then = if (it.then is Query) {
-                    getQueryExpr(it.then).expr
+                    getQueryExpr(it.then, dbType).expr
                 } else {
                     getExpr(it.then)
                 }
-                expr.addItem(getQueryExpr(it.query).expr, then)
+                expr.addItem(getQueryExpr(it.query, dbType).expr, then)
             }
 
             val default = if (query.default is Query) {
-                getQueryExpr(query.default).expr
+                getQueryExpr(query.default, dbType).expr
             } else {
                 getExpr(query.default)
             }
@@ -546,11 +546,12 @@ fun getQueryExpr(query: Query?): QueryExpr {
                         is String -> SQLCharExpr(query.value)
                         else -> throw TypeCastException("取Json值时，表达式右侧只支持String或Int")
                     }
-                    val expr = SQLBinaryOpExpr(getQueryExpr(query.query).expr, operator, valueExpr)
+                    val expr = SQLBinaryOpExpr(getQueryExpr(query.query, dbType).expr, operator, valueExpr)
                     QueryExpr(expr, query.alias)
                 }
                 DB.MYSQL -> {
-                    val expr = SQLBinaryOpExpr(getQueryExpr(query.query).expr, operator, SQLCharExpr(query.chain))
+                    val expr =
+                        SQLBinaryOpExpr(getQueryExpr(query.query, dbType).expr, operator, SQLCharExpr(query.chain))
                     QueryExpr(expr, query.alias)
                 }
                 else -> throw TypeCastException("Json操作暂不支持此数据库")
@@ -559,21 +560,21 @@ fun getQueryExpr(query: Query?): QueryExpr {
         is QueryCast -> {
             val dataType = SQLCharacterDataType(query.type)
             val expr = SQLCastExpr()
-            expr.expr = getQueryExpr(query.query).expr
+            expr.expr = getQueryExpr(query.query, dbType).expr
             expr.dataType = dataType
             QueryExpr(expr, query.alias)
         }
         is QueryInList<*> -> {
             val expr = SQLInListExpr()
             expr.isNot = query.isNot
-            expr.expr = getQueryExpr(query.query).expr
+            expr.expr = getQueryExpr(query.query, dbType).expr
             query.list.forEach { expr.addTarget(getExpr(it)) }
             QueryExpr(expr)
         }
         is QueryInSubQuery -> {
             val expr = SQLInSubQueryExpr()
             expr.isNot = query.isNot
-            expr.expr = getQueryExpr(query.query).expr
+            expr.expr = getQueryExpr(query.query, dbType).expr
             expr.subQuery = SQLSelect(query.subQuery.getSelect())
             QueryExpr(expr)
         }
@@ -634,9 +635,6 @@ fun <T> getExpr(value: T): SQLExpr {
             value.forEach { expr.addItem(getExpr(it)) }
             expr
         }
-//        is Query -> {
-//            getQueryExpr(value).expr
-//        }
         else -> throw TypeCastException("未找到对应的数据类型")
     }
 }
