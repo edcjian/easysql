@@ -240,10 +240,33 @@ object TestSql {
 //        val select = Select(DB.PGSQL).from("table").select(findInSet("1", column("a"), DB.PGSQL)).sql()
 //        println(select)
 
-        val select = Select(DB.PGSQL)
-                .from("table")
-                .select(arrayAgg(column("a"), ",", DB.PGSQL, column("a").orderByAsc(), true))
-                .sql()
-        println(select)
+//        val select = Select(DB.PGSQL)
+//                .from("table")
+//                .select(arrayAgg(column("a"), ",", DB.PGSQL, column("a").orderByAsc(), true))
+//                .sql()
+//        println(select)
+//
+//        val select = Select()
+//                .from(User)
+//                .select(User.name alias "c2", countDistinct(User.id) alias "count")
+//                .where(User.id gt 1)
+//                .groupBy(User.name)
+//                .sql()
+//        println(select)
+
+//        val select = Select()
+//                .from(User)
+//                .select(User.id + 1)
+//                .where((User.name like "%xxx%") or (User.name inList listOf("a", "b")) and (User.id gt 1))
+//                .orderByAsc(User.id)
+//                .sql()
+//        println(select)
+
+//        val select = (Select().from(User).select(User.id alias "id") union
+//                Select().from(User).select(User.id alias "id")).sql()
+//        println(select)
+
+//        val select = Select().from(User).leftJoin(User1, on = User.id eq User1.id).sql()
+//        println(select)
     }
 }
