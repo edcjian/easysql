@@ -508,9 +508,20 @@ fun getQueryExpr(query: Query?): QueryExpr {
         is QueryCase<*> -> {
             val expr = SQLCaseExpr()
             query.conditions.forEach {
-                expr.addItem(getQueryExpr(it.query).expr, getExpr(it.then))
+                val then = if (it.then is Query) {
+                    getQueryExpr(it.then).expr
+                } else {
+                    getExpr(it.then)
+                }
+                expr.addItem(getQueryExpr(it.query).expr, then)
             }
-            expr.elseExpr = getExpr(query.default)
+
+            val default = if (query.default is Query) {
+                getQueryExpr(query.default).expr
+            } else {
+                getExpr(query.default)
+            }
+            expr.elseExpr = default
             QueryExpr(expr, query.alias)
         }
         is QuerySub -> {
@@ -623,9 +634,9 @@ fun <T> getExpr(value: T): SQLExpr {
             value.forEach { expr.addItem(getExpr(it)) }
             expr
         }
-        is Query -> {
-            getQueryExpr(value).expr
-        }
+//        is Query -> {
+//            getQueryExpr(value).expr
+//        }
         else -> throw TypeCastException("未找到对应的数据类型")
     }
 }

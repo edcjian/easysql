@@ -188,12 +188,12 @@ object TestSql {
 //                .sql()
 //        println(select)
 
-//        val case = case(User.gender eq 1 then User.gender) elseIs null
-//        val select = Select()
-//                .from(User)
-//                .select(count(case) alias "male_count")
-//                .sql()
-//        println(select)
+        val case = case(User.gender eq 1 then User.gender) elseIs null
+        val select = Select()
+                .from(User)
+                .select(count(case) alias "male_count")
+                .sql()
+        println(select)
 
 //        val select = (Select().from("t1").select("a") union
 //                Select().from("t2").select("a") unionAll
@@ -254,13 +254,13 @@ object TestSql {
 //                .sql()
 //        println(select)
 
-        val select = Select()
-                .from(User)
-                .select(User.id + 1)
-                .where((User.name like "%xxx%") or (User.name inList Select().from(User).select(User.name)) and (User.id gt 1))
-                .orderByAsc(User.id)
-                .sql()
-        println(select)
+//        val select = Select()
+//                .from(User)
+//                .select(User.id + 1)
+//                .where((User.name like "%xxx%") or (User.name inList Select().from(User).select(User.name)) and (User.id gt 1))
+//                .orderByAsc(User.id)
+//                .sql()
+//        println(select)
 
 //        val select = (Select().from(User).select(User.id alias "id") union
 //                Select().from(User).select(User.id alias "id")).sql()
