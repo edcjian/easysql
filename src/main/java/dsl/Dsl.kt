@@ -617,16 +617,8 @@ fun <T> getExpr(value: T): SQLExpr {
             value.forEach { expr.addItem(getExpr(it)) }
             expr
         }
-        is QueryColumn -> {
-            val expr = SQLIdentifierExpr()
-            expr.name = value.column
-            expr
-        }
-        is QueryTableColumn ->{
-            val expr = SQLPropertyExpr()
-            expr.name = value.column
-            expr.owner = SQLIdentifierExpr(value.table)
-            expr
+        is Query -> {
+            getQueryExpr(value).expr
         }
         else -> throw TypeCastException("未找到对应的数据类型")
     }
