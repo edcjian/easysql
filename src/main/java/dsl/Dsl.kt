@@ -454,10 +454,6 @@ infix fun Query.xor(query: Query): QueryBinary {
     return QueryBinary(this, "XOR", query)
 }
 
-fun Query.sqlString(): String {
-    return SQLUtils.toSQLString(getQueryExpr(this).expr)
-}
-
 infix fun SelectQuery.union(select: SelectQuery): SelectQuery {
     return UnionSelect(this, SQLUnionOperator.UNION, select, this.getDbType())
 }
