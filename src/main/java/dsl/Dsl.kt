@@ -38,6 +38,10 @@ fun column(column: String, alias: String): QueryColumn {
     return QueryColumn(column, alias)
 }
 
+fun TableSchema.column(name: String): QueryTableColumn {
+    return QueryTableColumn(this.tableName, name)
+}
+
 fun <T> const(value: T): QueryConst<T> {
     return QueryConst(value)
 }
@@ -88,8 +92,12 @@ fun count(column: String): Query {
     return QueryAggFunction("COUNT", listOf(QueryColumn(column)))
 }
 
+fun countDistinct(query: Query): Query {
+    return QueryAggFunction("COUNT", listOf(query), SQLAggregateOption.DISTINCT)
+}
+
 fun countDistinct(column: String): Query {
-    return QueryAggFunction("COUNT", listOf(QueryColumn(column)), SQLAggregateOption.DISTINCT)
+    return QueryAggFunction("COUNT", listOf(column(column)), SQLAggregateOption.DISTINCT)
 }
 
 fun sum(query: Query): Query {
@@ -151,11 +159,11 @@ fun cast(query: Query, type: String): Query {
 }
 
 fun stringAgg(
-    query: Query,
-    separator: String,
-    dbType: DB,
-    orderBy: SQLOrderBy? = null,
-    distinct: Boolean = false
+        query: Query,
+        separator: String,
+        dbType: DB,
+        orderBy: SQLOrderBy? = null,
+        distinct: Boolean = false
 ): Query {
     val distinctType = if (distinct) {
         SQLAggregateOption.DISTINCT
@@ -164,17 +172,17 @@ fun stringAgg(
     }
     return when (dbType) {
         DB.MYSQL -> QueryAggFunction(
-            "GROUP_CONCAT",
-            listOf(query),
-            attributes = mapOf("SEPARATOR" to const(separator)),
-            option = distinctType,
-            orderBy = orderBy
+                "GROUP_CONCAT",
+                listOf(query),
+                attributes = mapOf("SEPARATOR" to const(separator)),
+                option = distinctType,
+                orderBy = orderBy
         )
         DB.PGSQL -> QueryAggFunction(
-            "STRING_AGG",
-            listOf(cast(query, "VARCHAR"), const(separator)),
-            option = distinctType,
-            orderBy = orderBy
+                "STRING_AGG",
+                listOf(cast(query, "VARCHAR"), const(separator)),
+                option = distinctType,
+                orderBy = orderBy
         )
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
@@ -182,11 +190,11 @@ fun stringAgg(
 }
 
 fun arrayAgg(
-    query: Query,
-    separator: String,
-    dbType: DB,
-    orderBy: SQLOrderBy? = null,
-    distinct: Boolean = false
+        query: Query,
+        separator: String,
+        dbType: DB,
+        orderBy: SQLOrderBy? = null,
+        distinct: Boolean = false
 ): Query {
     val distinctType = if (distinct) {
         SQLAggregateOption.DISTINCT
@@ -195,22 +203,22 @@ fun arrayAgg(
     }
     return when (dbType) {
         DB.MYSQL -> QueryAggFunction(
-            "GROUP_CONCAT",
-            listOf(query),
-            attributes = mapOf("SEPARATOR" to const(separator)),
-            option = distinctType,
-            orderBy = orderBy
+                "GROUP_CONCAT",
+                listOf(query),
+                attributes = mapOf("SEPARATOR" to const(separator)),
+                option = distinctType,
+                orderBy = orderBy
         )
         DB.PGSQL -> QueryExprFunction(
-            "ARRAY_TO_STRING",
-            listOf(
-                QueryAggFunction(
-                    "ARRAY_AGG",
-                    listOf(cast(query, "VARCHAR")),
-                    option = distinctType,
-                    orderBy = orderBy
-                ), const(separator)
-            )
+                "ARRAY_TO_STRING",
+                listOf(
+                        QueryAggFunction(
+                                "ARRAY_AGG",
+                                listOf(cast(query, "VARCHAR")),
+                                option = distinctType,
+                                orderBy = orderBy
+                        ), const(separator)
+                )
         )
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
@@ -221,9 +229,9 @@ fun findInSet(value: Query, query: Query, dbType: DB): Query {
     return when (dbType) {
         DB.MYSQL -> QueryExprFunction("FIND_IN_SET", listOf(value, query))
         DB.PGSQL -> QueryBinary(
-            cast(value, "VARCHAR"),
-            "=",
-            QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query, const(",")))))
+                cast(value, "VARCHAR"),
+                "=",
+                QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query, const(",")))))
         )
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
@@ -402,35 +410,35 @@ infix fun Query.notLike(query: String): QueryBinary {
     return QueryBinary(this, "NOT LIKE", const(query))
 }
 
-fun <T> inList(queryColumn: QueryColumn, list: List<T>, isNot: Boolean = false): QueryExpr {
+fun <T> inList(query: Query, list: List<T>, isNot: Boolean = false): Query {
     val expr = SQLInListExpr()
     expr.isNot = isNot
-    expr.expr = SQLIdentifierExpr(queryColumn.column)
+    expr.expr = getQueryExpr(query).expr
     list.forEach { expr.addTarget(getExpr(it)) }
     return QueryExpr(expr)
 }
 
-fun inList(queryColumn: QueryColumn, query: SelectQuery, isNot: Boolean = false): QueryExpr {
+fun inList(query: Query, subQuery: SelectQuery, isNot: Boolean = false): Query {
     val expr = SQLInSubQueryExpr()
     expr.isNot = isNot
-    expr.expr = SQLIdentifierExpr(queryColumn.column)
-    expr.subQuery = SQLSelect(query.getSelect())
+    expr.expr = getQueryExpr(query).expr
+    expr.subQuery = SQLSelect(subQuery.getSelect())
     return QueryExpr(expr)
 }
 
-infix fun <T> QueryColumn.inList(query: List<T>): QueryExpr {
+infix fun <T> Query.inList(query: List<T>): Query {
     return inList(this, query)
 }
 
-infix fun QueryColumn.inList(query: SelectQuery): QueryExpr {
+infix fun Query.inList(query: SelectQuery): Query {
     return inList(this, query)
 }
 
-infix fun <T> QueryColumn.notInList(query: List<T>): QueryExpr {
+infix fun <T> Query.notInList(query: List<T>): Query {
     return inList(this, query, true)
 }
 
-infix fun QueryColumn.notInList(query: SelectQuery): QueryExpr {
+infix fun Query.notInList(query: SelectQuery): Query {
     return inList(this, query, true)
 }
 
@@ -525,6 +533,12 @@ fun getQueryExpr(query: Query?): QueryExpr {
             val sqlSelect = SQLSelect()
             sqlSelect.query = query.selectQuery.getSelect()
             expr.subQuery = sqlSelect
+            QueryExpr(expr, query.alias)
+        }
+        is QueryTableColumn -> {
+            val expr = SQLPropertyExpr()
+            expr.name = query.column
+            expr.owner = SQLIdentifierExpr(query.table)
             QueryExpr(expr, query.alias)
         }
         is QueryJson -> {

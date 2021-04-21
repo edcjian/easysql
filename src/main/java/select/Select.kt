@@ -10,9 +10,7 @@ import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr
 import com.alibaba.druid.sql.ast.statement.*
 import dsl.*
-import expr.DB
-import expr.Query
-import expr.QueryColumn
+import expr.*
 
 
 class Select(db: DB = DB.MYSQL) : SelectQuery {
@@ -41,10 +39,9 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return this
     }
 
-//    inline fun <reified T : Any> from(): Select {
-//        val tableName = T::class.java.getAnnotation(Table::class.java).name
-//        return from(tableName)
-//    }
+    fun <T : TableSchema> from(table: T, alias: String? = null): Select {
+        return from(table.tableName, alias)
+    }
 
     fun distinct(): Select {
         sqlSelect.distionOption = 2
@@ -63,13 +60,6 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         sqlSelect.addSelectItem(SQLAllColumnExpr())
         return this
     }
-
-//    fun select(vararg columns: KProperty<*>): Select {
-//        columns.forEach {
-//            println(it)
-//        }
-//        return select(*columns.map { it.name }.toTypedArray())
-//    }
 
     fun select(vararg columns: String): Select {
         columns.forEach {
@@ -118,12 +108,12 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     private fun selectStringAgg(
-        function: (Query, String, DB, SQLOrderBy?, Boolean) -> Query,
-        query: Query,
-        separator: String = ",",
-        orderBy: SQLOrderBy? = null,
-        distinct: Boolean = false,
-        alias: String? = null
+            function: (Query, String, DB, SQLOrderBy?, Boolean) -> Query,
+            query: Query,
+            separator: String = ",",
+            orderBy: SQLOrderBy? = null,
+            distinct: Boolean = false,
+            alias: String? = null
     ): Select {
         var select = function(query, separator, this.dbType, orderBy, distinct)
         alias?.let { select = select alias it }
@@ -131,21 +121,21 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     fun selectStringAgg(
-        query: Query,
-        separator: String = ",",
-        orderBy: SQLOrderBy? = null,
-        distinct: Boolean = false,
-        alias: String? = null
+            query: Query,
+            separator: String = ",",
+            orderBy: SQLOrderBy? = null,
+            distinct: Boolean = false,
+            alias: String? = null
     ): Select {
         return selectStringAgg(::stringAgg, query, separator, orderBy, distinct, alias)
     }
 
     fun selectArrayAgg(
-        query: Query,
-        separator: String = ",",
-        orderBy: SQLOrderBy? = null,
-        distinct: Boolean = false,
-        alias: String? = null
+            query: Query,
+            separator: String = ",",
+            orderBy: SQLOrderBy? = null,
+            distinct: Boolean = false,
+            alias: String? = null
     ): Select {
         return selectStringAgg(::arrayAgg, query, separator, orderBy, distinct, alias)
     }
@@ -174,13 +164,11 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return this
     }
 
-    private fun orderBy(specification: SQLOrderingSpecification, vararg columns: String) {
+    private fun orderBy(specification: SQLOrderingSpecification, vararg columns: Query) {
         val order = SQLOrderBy()
         columns.forEach {
-            val expr = SQLIdentifierExpr()
-            expr.name = it
             val item = SQLSelectOrderByItem()
-            item.expr = expr
+            item.expr = getQueryExpr(it).expr
             item.type = specification
             order.addItem(item)
         }
@@ -188,11 +176,21 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     fun orderByAsc(vararg columns: String): Select {
+        orderBy(SQLOrderingSpecification.ASC, *columns.map { column(it) }.toTypedArray())
+        return this
+    }
+
+    fun orderByAsc(vararg columns: Query): Select {
         orderBy(SQLOrderingSpecification.ASC, *columns)
         return this
     }
 
     fun orderByDesc(vararg columns: String): Select {
+        orderBy(SQLOrderingSpecification.DESC, *columns.map { column(it) }.toTypedArray())
+        return this
+    }
+
+    fun orderByDesc(vararg columns: Query): Select {
         orderBy(SQLOrderingSpecification.DESC, *columns)
         return this
     }
@@ -227,10 +225,10 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
 
     // todo 后续抽象出来一个高阶函数放到dsl中，Select实现高阶函数内容
     private fun join(
-        table: String,
-        alias: String? = null,
-        on: Query,
-        joinType: SQLJoinTableSource.JoinType
+            table: String,
+            alias: String? = null,
+            on: Query,
+            joinType: SQLJoinTableSource.JoinType
     ): Select {
         val join = SQLJoinTableSource()
         join.left = joinLeft
@@ -246,10 +244,10 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     private fun join(
-        table: SelectQuery,
-        alias: String? = null,
-        on: Query,
-        joinType: SQLJoinTableSource.JoinType
+            table: SelectQuery,
+            alias: String? = null,
+            on: Query,
+            joinType: SQLJoinTableSource.JoinType
     ): Select {
         val join = SQLJoinTableSource()
         join.left = joinLeft
@@ -268,12 +266,20 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return join(table, alias, on, SQLJoinTableSource.JoinType.JOIN)
     }
 
+    fun join(table: TableSchema, alias: String? = null, on: Query): Select {
+        return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.JOIN)
+    }
+
     fun join(table: SelectQuery, alias: String?, on: Query): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.JOIN)
     }
 
     fun leftJoin(table: String, alias: String? = null, on: Query): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.LEFT_OUTER_JOIN)
+    }
+
+    fun leftJoin(table: TableSchema, alias: String? = null, on: Query): Select {
+        return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.LEFT_OUTER_JOIN)
     }
 
     fun leftJoin(table: SelectQuery, alias: String?, on: Query): Select {
@@ -284,12 +290,20 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return join(table, alias, on, SQLJoinTableSource.JoinType.RIGHT_OUTER_JOIN)
     }
 
+    fun rightJoin(table: TableSchema, alias: String? = null, on: Query): Select {
+        return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.RIGHT_OUTER_JOIN)
+    }
+
     fun rightJoin(table: SelectQuery, alias: String?, on: Query): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.RIGHT_OUTER_JOIN)
     }
 
     fun innerJoin(table: String, alias: String? = null, on: Query): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.INNER_JOIN)
+    }
+
+    fun innerJoin(table: TableSchema, alias: String? = null, on: Query): Select {
+        return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.INNER_JOIN)
     }
 
     fun innerJoin(table: SelectQuery, alias: String?, on: Query): Select {
@@ -300,12 +314,20 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return join(table, alias, on, SQLJoinTableSource.JoinType.CROSS_JOIN)
     }
 
+    fun crossJoin(table: TableSchema, alias: String? = null, on: Query): Select {
+        return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.CROSS_JOIN)
+    }
+
     fun crossJoin(table: SelectQuery, alias: String?, on: Query): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.CROSS_JOIN)
     }
 
     fun fullJoin(table: String, alias: String? = null, on: Query): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.FULL_OUTER_JOIN)
+    }
+
+    fun fullJoin(table: TableSchema, alias: String? = null, on: Query): Select {
+        return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.FULL_OUTER_JOIN)
     }
 
     fun fullJoin(table: SelectQuery, alias: String?, on: Query): Select {
