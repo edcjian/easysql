@@ -42,6 +42,7 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
 注：<br>
 1.select可以接收若干个字符串、用column包裹的对象属性，也可以接收若干个复杂查询（后文会介绍）。<br>
 2.此处的alias是对String类和Query类实现的扩展函数，使用了Kotlin的扩展函数和中缀函数语法，用来起别名（数据库的AS子句）。
+3.此处的User.id，在Java中要使用User.Companion.getId()的方式获取。
 
 #### 当然也支持SELECT语句的各种功能：
 
