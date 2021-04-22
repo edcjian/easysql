@@ -156,8 +156,7 @@ fun cast(query: Query, type: String): Query {
 fun stringAgg(
     query: Query,
     separator: String,
-    dbType: DB,
-    orderBy: SQLOrderBy? = null,
+    orderBy: List<AggOrderBy> = listOf(),
     distinct: Boolean = false
 ): Query {
     val distinctType = if (distinct) {
@@ -165,30 +164,13 @@ fun stringAgg(
     } else {
         null
     }
-    return when (dbType) {
-        DB.MYSQL -> QueryAggFunction(
-            "GROUP_CONCAT",
-            listOf(query),
-            attributes = mapOf("SEPARATOR" to const(separator)),
-            option = distinctType,
-            orderBy = orderBy
-        )
-        DB.PGSQL -> QueryAggFunction(
-            "STRING_AGG",
-            listOf(cast(query, "VARCHAR"), const(separator)),
-            option = distinctType,
-            orderBy = orderBy
-        )
-        // TODO
-        else -> throw TypeCastException("暂不支持该数据库使用此函数")
-    }
+    return QueryAggFunction("*STRING_AGG", listOf(query, const(separator)), option = distinctType, orderBy = orderBy)
 }
 
 fun arrayAgg(
     query: Query,
     separator: String,
-    dbType: DB,
-    orderBy: SQLOrderBy? = null,
+    orderBy: List<AggOrderBy> = listOf(),
     distinct: Boolean = false
 ): Query {
     val distinctType = if (distinct) {
@@ -196,28 +178,7 @@ fun arrayAgg(
     } else {
         null
     }
-    return when (dbType) {
-        DB.MYSQL -> QueryAggFunction(
-            "GROUP_CONCAT",
-            listOf(query),
-            attributes = mapOf("SEPARATOR" to const(separator)),
-            option = distinctType,
-            orderBy = orderBy
-        )
-        DB.PGSQL -> QueryExprFunction(
-            "ARRAY_TO_STRING",
-            listOf(
-                QueryAggFunction(
-                    "ARRAY_AGG",
-                    listOf(cast(query, "VARCHAR")),
-                    option = distinctType,
-                    orderBy = orderBy
-                ), const(separator)
-            )
-        )
-        // TODO
-        else -> throw TypeCastException("暂不支持该数据库使用此函数")
-    }
+    return QueryAggFunction("*ARRAY_AGG", listOf(query, const(separator)), option = distinctType, orderBy = orderBy)
 }
 
 fun findInSet(value: Query, query: Query): Query {
@@ -250,22 +211,37 @@ fun jsonLength(query: Query, dbType: DB): Query {
     }
 }
 
-// FIXME 此处需要重写
-fun Query.orderBy(order: SQLOrderingSpecification = SQLOrderingSpecification.ASC): SQLOrderBy {
-    val orderBy = SQLOrderBy()
-    val expr = SQLSelectOrderByItem()
-    expr.expr = getQueryExpr(this, DB.MYSQL).expr
-    expr.type = order
-    orderBy.addItem(expr)
-    return orderBy
+// FIXME 此处需要重写 需要添加List<AggOrderBy>.orderBy
+fun orderBy(order: SQLOrderingSpecification = SQLOrderingSpecification.ASC, vararg query: Query): List<AggOrderBy> {
+    return query.map { AggOrderBy(it, order) }
 }
 
-fun Query.orderByAsc(): SQLOrderBy {
-    return orderBy()
+fun orderByAsc(vararg query: Query): List<AggOrderBy> {
+    return orderBy(SQLOrderingSpecification.ASC, *query)
 }
 
-fun Query.orderByDesc(): SQLOrderBy {
-    return orderBy(SQLOrderingSpecification.DESC)
+fun orderByDesc(vararg query: Query): List<AggOrderBy> {
+    return orderBy(SQLOrderingSpecification.DESC, *query)
+}
+
+fun List<AggOrderBy>.orderBy(
+    order: SQLOrderingSpecification = SQLOrderingSpecification.ASC,
+    vararg query: Query
+): List<AggOrderBy> {
+    val list = query.map { AggOrderBy(it, order) }
+    return this + list
+}
+
+fun List<AggOrderBy>.orderByAsc(
+    vararg query: Query
+): List<AggOrderBy> {
+    return this.orderBy(SQLOrderingSpecification.ASC, *query)
+}
+
+fun List<AggOrderBy>.orderByDesc(
+    vararg query: Query
+): List<AggOrderBy> {
+    return this.orderBy(SQLOrderingSpecification.DESC, *query)
 }
 
 infix fun Query.eq(query: Query): QueryBinary {
@@ -461,6 +437,14 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
             QueryExpr(expr, query.alias)
         }
         is QueryAggFunction -> {
+            if (query.name == "*STRING_AGG") {
+                return visitFunctionStringAgg(query, dbType)
+            }
+
+            if (query.name == "*ARRAY_AGG") {
+                return visitFunctionArrayAgg(query, dbType)
+            }
+
             val expr = SQLAggregateExpr(query.name)
             expr.option = query.option
             if (query.args.isEmpty()) {
@@ -471,7 +455,16 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
             query.attributes?.let { attributes ->
                 attributes.forEach { (k, v) -> expr.putAttribute(k, getQueryExpr(v, dbType).expr) }
             }
-            query.orderBy?.let { expr.orderBy = it }
+            if (query.orderBy.isNotEmpty()) {
+                val orderBy = SQLOrderBy()
+                query.orderBy.forEach {
+                    val orderByItem = SQLSelectOrderByItem()
+                    orderByItem.expr = getQueryExpr(it.query, dbType).expr
+                    orderByItem.type = it.order
+                    orderBy.addItem(orderByItem)
+                }
+                expr.orderBy = orderBy
+            }
             QueryExpr(expr, query.alias)
         }
         is QueryConst<*> -> QueryExpr(getExpr(query.value), query.alias)
@@ -588,6 +581,54 @@ fun visitFunctionFindInSet(query: QueryExprFunction, dbType: DB): QueryExpr {
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
     }
 
+    return QueryExpr(getQueryExpr(function, dbType).expr, query.alias)
+}
+
+fun visitFunctionStringAgg(query: QueryAggFunction, dbType: DB): QueryExpr {
+    val function = when (dbType) {
+        DB.MYSQL -> QueryAggFunction(
+            "GROUP_CONCAT",
+            listOf(query.args[0]),
+            attributes = mapOf("SEPARATOR" to query.args[1]),
+            option = query.option,
+            orderBy = query.orderBy
+        )
+        DB.PGSQL -> QueryAggFunction(
+            "STRING_AGG",
+            listOf(cast(query.args[0], "VARCHAR"), query.args[1]),
+            option = query.option,
+            orderBy = query.orderBy
+        )
+        // TODO
+        else -> throw TypeCastException("暂不支持该数据库使用此函数")
+    }
+    return QueryExpr(getQueryExpr(function, dbType).expr, query.alias)
+}
+
+
+fun visitFunctionArrayAgg(query: QueryAggFunction, dbType: DB): QueryExpr {
+    val function = when (dbType) {
+        DB.MYSQL -> QueryAggFunction(
+            "GROUP_CONCAT",
+            listOf(query.args[0]),
+            attributes = mapOf("SEPARATOR" to query.args[1]),
+            option = query.option,
+            orderBy = query.orderBy
+        )
+        DB.PGSQL -> QueryExprFunction(
+            "ARRAY_TO_STRING",
+            listOf(
+                QueryAggFunction(
+                    "ARRAY_AGG",
+                    listOf(cast(query.args[0], "VARCHAR")),
+                    option = query.option,
+                    orderBy = query.orderBy
+                ), query.args[1]
+            )
+        )
+        // TODO
+        else -> throw TypeCastException("暂不支持该数据库使用此函数")
+    }
     return QueryExpr(getQueryExpr(function, dbType).expr, query.alias)
 }
 

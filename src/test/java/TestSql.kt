@@ -276,7 +276,9 @@ object TestSql {
 //        val select = Select(DB.PGSQL).from(User).select(ifNull(User.name, "")).sql()
 //        println(select)
 
-        val select = Select(DB.MYSQL).from(User).select(User.name.json("a").json(1).jsonText("b")).sql()
+        val select = Select(DB.PGSQL).from(User)
+            .select(arrayAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.name).orderByAsc(User.gender), true))
+            .sql()
         println(select)
     }
 }

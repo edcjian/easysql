@@ -107,39 +107,6 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return select(select)
     }
 
-    private fun selectStringAgg(
-        function: (Query, String, DB, SQLOrderBy?, Boolean) -> Query,
-        query: Query,
-        separator: String = ",",
-        orderBy: SQLOrderBy? = null,
-        distinct: Boolean = false,
-        alias: String? = null
-    ): Select {
-        var select = function(query, separator, this.dbType, orderBy, distinct)
-        alias?.let { select = select alias it }
-        return select(select)
-    }
-
-    fun selectStringAgg(
-        query: Query,
-        separator: String = ",",
-        orderBy: SQLOrderBy? = null,
-        distinct: Boolean = false,
-        alias: String? = null
-    ): Select {
-        return selectStringAgg(::stringAgg, query, separator, orderBy, distinct, alias)
-    }
-
-    fun selectArrayAgg(
-        query: Query,
-        separator: String = ",",
-        orderBy: SQLOrderBy? = null,
-        distinct: Boolean = false,
-        alias: String? = null
-    ): Select {
-        return selectStringAgg(::arrayAgg, query, separator, orderBy, distinct, alias)
-    }
-
     fun where(query: Query): Select {
         sqlSelect.addCondition(getQueryExpr(query, this.dbType).expr)
         return this

@@ -2,6 +2,7 @@ package expr
 
 import com.alibaba.druid.sql.ast.SQLExpr
 import com.alibaba.druid.sql.ast.SQLOrderBy
+import com.alibaba.druid.sql.ast.SQLOrderingSpecification
 import com.alibaba.druid.sql.ast.expr.SQLAggregateOption
 import dsl.const
 import select.SelectQuery
@@ -61,7 +62,7 @@ data class QueryAggFunction(
     val args: List<Query>,
     val option: SQLAggregateOption? = null,
     val attributes: Map<String, Query>? = null,
-    val orderBy: SQLOrderBy? = null,
+    val orderBy: List<AggOrderBy> = listOf(),
     override var alias: String? = null
 ) : Query()
 
@@ -106,6 +107,8 @@ data class QueryInSubQuery(
 ) : Query()
 
 data class CaseBranch<T>(val query: Query, val then: T)
+
+data class AggOrderBy(val query: Query, val order: SQLOrderingSpecification)
 
 enum class DB {
     MYSQL, ORACLE, PGSQL, HIVE
