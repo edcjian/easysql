@@ -142,9 +142,9 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
         AND user.user_name LIKE '%xxx%'
 
 #### 有条件的WHERE子句：
-有时候我们需要动态拼接条件，比如检验某个传入的参数不为空时，例如：
+有时候我们需要动态拼接条件，比如检验某个传入的参数不为空时才拼接，例如：
 
-    val userName: String? = null // 假如此处为用户传参
+    val userName: String? = null // 假设此处为用户传参
     val select = Select()
                 .from(User)
                 .where({ !userName.isNullOrEmpty() }, User.name eq userName)
