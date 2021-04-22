@@ -11,6 +11,7 @@ import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr
 import com.alibaba.druid.sql.ast.statement.*
 import dsl.*
 import expr.*
+import visitor.*
 
 
 class Select(db: DB = DB.MYSQL) : SelectQuery {

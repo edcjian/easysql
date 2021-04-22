@@ -4,7 +4,7 @@ import com.alibaba.druid.sql.SQLUtils
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery
 import com.alibaba.druid.sql.ast.statement.SQLUnionOperator
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery
-import dsl.getDbType
+import visitor.getDbType
 import expr.DB
 
 class UnionSelect(

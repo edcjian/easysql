@@ -109,7 +109,3 @@ data class QueryInSubQuery(
 data class CaseBranch<T>(val query: Query, val then: T)
 
 data class AggOrderBy(val query: Query, val order: SQLOrderingSpecification)
-
-enum class DB {
-    MYSQL, ORACLE, PGSQL, HIVE
-}
