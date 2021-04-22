@@ -11,6 +11,7 @@ import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr
 import com.alibaba.druid.sql.ast.statement.*
 import dsl.*
 import expr.*
+import visitor.*
 
 
 class Select(db: DB = DB.MYSQL) : SelectQuery {
@@ -50,7 +51,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
 
     fun select(vararg query: Query): Select {
         query.forEach {
-            val queryExpr = getQueryExpr(it)
+            val queryExpr = getQueryExpr(it, this.dbType)
             sqlSelect.addSelectItem(queryExpr.expr, queryExpr.alias)
         }
         return this
@@ -96,52 +97,19 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     fun selectIfNull(query: Query, value: Query, alias: String? = null): Select {
-        var select = ifNull(query, value, this.dbType)
+        var select = ifNull(query, value)
         alias?.let { select = select alias it }
         return select(select)
     }
 
     fun <T> selectIfNull(query: Query, value: T, alias: String? = null): Select {
-        var select = ifNull(query, const(value), this.dbType)
+        var select = ifNull(query, const(value))
         alias?.let { select = select alias it }
         return select(select)
-    }
-
-    private fun selectStringAgg(
-            function: (Query, String, DB, SQLOrderBy?, Boolean) -> Query,
-            query: Query,
-            separator: String = ",",
-            orderBy: SQLOrderBy? = null,
-            distinct: Boolean = false,
-            alias: String? = null
-    ): Select {
-        var select = function(query, separator, this.dbType, orderBy, distinct)
-        alias?.let { select = select alias it }
-        return select(select)
-    }
-
-    fun selectStringAgg(
-            query: Query,
-            separator: String = ",",
-            orderBy: SQLOrderBy? = null,
-            distinct: Boolean = false,
-            alias: String? = null
-    ): Select {
-        return selectStringAgg(::stringAgg, query, separator, orderBy, distinct, alias)
-    }
-
-    fun selectArrayAgg(
-            query: Query,
-            separator: String = ",",
-            orderBy: SQLOrderBy? = null,
-            distinct: Boolean = false,
-            alias: String? = null
-    ): Select {
-        return selectStringAgg(::arrayAgg, query, separator, orderBy, distinct, alias)
     }
 
     fun where(query: Query): Select {
-        sqlSelect.addCondition(getQueryExpr(query).expr)
+        sqlSelect.addCondition(getQueryExpr(query, this.dbType).expr)
         return this
     }
 
@@ -160,7 +128,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     fun having(query: Query): Select {
-        sqlSelect.addHaving(getQueryExpr(query).expr)
+        sqlSelect.addHaving(getQueryExpr(query, this.dbType).expr)
         return this
     }
 
@@ -168,7 +136,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         val order = SQLOrderBy()
         columns.forEach {
             val item = SQLSelectOrderByItem()
-            item.expr = getQueryExpr(it).expr
+            item.expr = getQueryExpr(it, this.dbType).expr
             item.type = specification
             order.addItem(item)
         }
@@ -211,7 +179,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
             group = SQLSelectGroupByClause()
         }
         columns.forEach {
-            val expr = getQueryExpr(it).expr
+            val expr = getQueryExpr(it, this.dbType).expr
             group.addItem(expr)
         }
         sqlSelect.groupBy = group
@@ -225,10 +193,10 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
 
     // todo 后续抽象出来一个高阶函数放到dsl中，Select实现高阶函数内容
     private fun join(
-            table: String,
-            alias: String? = null,
-            on: Query,
-            joinType: SQLJoinTableSource.JoinType
+        table: String,
+        alias: String? = null,
+        on: Query,
+        joinType: SQLJoinTableSource.JoinType
     ): Select {
         val join = SQLJoinTableSource()
         join.left = joinLeft
@@ -236,7 +204,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         right.alias = alias
         join.right = right
         join.joinType = joinType
-        val condition = getQueryExpr(on).expr
+        val condition = getQueryExpr(on, this.dbType).expr
         join.condition = condition
         sqlSelect.from = join
         joinLeft = join
@@ -244,10 +212,10 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     private fun join(
-            table: SelectQuery,
-            alias: String? = null,
-            on: Query,
-            joinType: SQLJoinTableSource.JoinType
+        table: SelectQuery,
+        alias: String? = null,
+        on: Query,
+        joinType: SQLJoinTableSource.JoinType
     ): Select {
         val join = SQLJoinTableSource()
         join.left = joinLeft
@@ -255,7 +223,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         tableSource.alias = alias
         join.right = tableSource
         join.joinType = joinType
-        val condition = getQueryExpr(on).expr
+        val condition = getQueryExpr(on, this.dbType).expr
         join.condition = condition
         sqlSelect.from = join
         joinLeft = join

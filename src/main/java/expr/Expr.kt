@@ -2,6 +2,7 @@ package expr
 
 import com.alibaba.druid.sql.ast.SQLExpr
 import com.alibaba.druid.sql.ast.SQLOrderBy
+import com.alibaba.druid.sql.ast.SQLOrderingSpecification
 import com.alibaba.druid.sql.ast.expr.SQLAggregateOption
 import dsl.const
 import select.SelectQuery
@@ -57,36 +58,54 @@ data class QueryColumn(val column: String, override var alias: String? = null) :
 data class QueryExprFunction(val name: String, val args: List<Query>, override var alias: String? = null) : Query()
 
 data class QueryAggFunction(
-        val name: String,
-        val args: List<Query>,
-        val option: SQLAggregateOption? = null,
-        val attributes: Map<String, Query>? = null,
-        val orderBy: SQLOrderBy? = null,
-        override var alias: String? = null
+    val name: String,
+    val args: List<Query>,
+    val option: SQLAggregateOption? = null,
+    val attributes: Map<String, Query>? = null,
+    val orderBy: List<AggOrderBy> = listOf(),
+    override var alias: String? = null
 ) : Query()
 
 data class QueryConst<T>(val value: T, override var alias: String? = null) : Query()
 
 data class QueryBinary(val left: Query, val operator: String, val right: Query?, override var alias: String? = null) :
-        Query()
+    Query()
 
 data class QuerySub(val selectQuery: SelectQuery, override var alias: String? = null) : Query()
 
-data class QueryCase<T>(val conditions: List<CaseBranch<T>>, val default: T? = null, override var alias: String? = null) : Query()
+data class QueryCase<T>(
+    val conditions: List<CaseBranch<T>>,
+    val default: T? = null,
+    override var alias: String? = null
+) : Query()
 
 data class QueryTableColumn(val table: String, val column: String, override var alias: String? = null) : Query()
 
 data class QueryJson(
-        val query: Query,
-        val operator: String,
-        val value: Any,
-        val db: DB,
-        val chain: String? = null,
-        override var alias: String? = null
+    val query: Query,
+    val initQuery: Query,
+    val operator: String,
+    val value: Any,
+    val chain: String? = null,
+    override var alias: String? = null
 ) : Query()
 
-data class CaseBranch<T>(val query: QueryExpr, val then: T)
+data class QueryCast(val query: Query, val type: String, override var alias: String? = null) : Query()
 
-enum class DB {
-    MYSQL, ORACLE, PGSQL, HIVE
-}
+data class QueryInList<T>(
+    val query: Query,
+    val list: List<T>,
+    val isNot: Boolean = false,
+    override var alias: String? = null
+) : Query()
+
+data class QueryInSubQuery(
+    val query: Query,
+    val subQuery: SelectQuery,
+    val isNot: Boolean = false,
+    override var alias: String? = null
+) : Query()
+
+data class CaseBranch<T>(val query: Query, val then: T)
+
+data class AggOrderBy(val query: Query, val order: SQLOrderingSpecification)

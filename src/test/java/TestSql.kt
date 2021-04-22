@@ -1,3 +1,4 @@
+import com.alibaba.druid.sql.visitor.functions.IfNull
 import dsl.*
 import expr.DB
 import select.Select
@@ -188,12 +189,12 @@ object TestSql {
 //                .sql()
 //        println(select)
 
-        val case = case(User.gender eq 1 then User.gender) elseIs null
-        val select = Select()
-                .from(User)
-                .select(count(case) alias "male_count")
-                .sql()
-        println(select)
+//        val case = case(User.gender eq 1 then User.gender) elseIs null
+//        val select = Select()
+//                .from(User)
+//                .select(count(case) alias "male_count")
+//                .sql()
+//        println(select)
 
 //        val select = (Select().from("t1").select("a") union
 //                Select().from("t2").select("a") unionAll
@@ -257,7 +258,7 @@ object TestSql {
 //        val select = Select()
 //                .from(User)
 //                .select(User.id + 1)
-//                .where((User.name like "%xxx%") or (User.name inList listOf("a", "b")) and (User.id gt 1))
+//                .where((User.name like "%xxx%") or (User.name inList Select().from(User).select(User.name)) and (User.id gt 1))
 //                .orderByAsc(User.id)
 //                .sql()
 //        println(select)
@@ -268,5 +269,16 @@ object TestSql {
 
 //        val select = Select().from(User).leftJoin(User1, on = User.id eq User1.id).sql()
 //        println(select)
+
+//        val select = Select(DB.ORACLE).from(User).select(findInSet("1", User.name)).sql()
+//        println(select)
+
+//        val select = Select(DB.PGSQL).from(User).select(ifNull(User.name, "")).sql()
+//        println(select)
+
+        val select = Select(DB.PGSQL).from(User)
+            .select(arrayAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.name).orderByAsc(User.gender), true))
+            .sql()
+        println(select)
     }
 }
