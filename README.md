@@ -404,7 +404,7 @@ pgsql中使用：
 **jsonLength：**<br>
 
 作用为获取json的数组长度。<br>
-参数为Json调用链；<br>
+参数为Json调用链或一个Query的子类型<br>
 
 例子：
 
