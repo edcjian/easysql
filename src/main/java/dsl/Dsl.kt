@@ -221,16 +221,6 @@ fun arrayAgg(
 }
 
 fun findInSet(value: Query, query: Query): Query {
-//    return when (dbType) {
-//        DB.MYSQL -> QueryExprFunction("FIND_IN_SET", listOf(value, query))
-//        DB.PGSQL -> QueryBinary(
-//            cast(value, "VARCHAR"),
-//            "=",
-//            QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query, const(",")))))
-//        )
-//        // TODO
-//        else -> throw TypeCastException("暂不支持该数据库使用此函数")
-//    }
     return QueryExprFunction("*FIND_IN_SET", listOf(value, query))
 }
 
