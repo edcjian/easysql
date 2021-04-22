@@ -52,25 +52,11 @@ fun findInSet(value: String, query: Query): Query {
     return findInSet(const(value), query)
 }
 
-fun jsonLength(query: Query, dbType: DB): Query {
-    return when (dbType) {
-        DB.MYSQL -> {
-            if (query is QueryJson) {
-                QueryExprFunction("JSON_LENGTH", listOf(query.query, const(query.chain)))
-            } else {
-                QueryExprFunction("JSON_LENGTH", listOf(query))
-            }
-        }
-        DB.PGSQL -> {
-            val arg = if (query is QueryJson) {
-                query
-            } else {
-                cast(query, "JSONB")
-            }
-            QueryExprFunction("JSONB_ARRAY_LENGTH", listOf(arg))
-        }
-        // TODO
-        else -> throw TypeCastException("暂不支持该数据库使用此函数")
+fun jsonLength(query: Query): Query {
+    return  if (query is QueryJson) {
+        QueryExprFunction("*JSON_LENGTH", listOf(query.query , query.initQuery, const(query.chain)))
+    } else {
+        QueryExprFunction("*JSON_LENGTH", listOf(query))
     }
 }
 

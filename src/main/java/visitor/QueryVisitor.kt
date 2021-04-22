@@ -43,7 +43,7 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
 
         is QueryInList<*> -> visitQueryInList(query, dbType)
 
-        is QueryInSubQuery -> visitQueryInSubQuery(query,dbType)
+        is QueryInSubQuery -> visitQueryInSubQuery(query, dbType)
 
         else -> throw TypeCastException("未找到对应的查询类型")
     }
@@ -70,6 +70,10 @@ fun visitQueryExprFunction(query: QueryExprFunction, dbType: DB): QueryExpr {
 
     if (query.name == "*FIND_IN_SET") {
         return visitFunctionFindInSet(query, dbType)
+    }
+
+    if (query.name == "*JSON_LENGTH") {
+        return visitFunctionJsonLength(query, dbType)
     }
 
     val expr = SQLMethodInvokeExpr()
@@ -169,8 +173,15 @@ fun visitQueryJson(query: QueryJson, dbType: DB): QueryExpr {
                 is String -> SQLCharExpr(query.value)
                 else -> throw TypeCastException("取Json值时，表达式右侧只支持String或Int")
             }
+
+            val cast = if (query.query is QueryJson) {
+                query.query
+            }else{
+                cast(query.query,"JSONB")
+            }
+
             val expr =
-                SQLBinaryOpExpr(getQueryExpr(cast(query.query, "JSONB"), dbType).expr, operator, valueExpr)
+                SQLBinaryOpExpr(getQueryExpr(cast, dbType).expr, operator, valueExpr)
             QueryExpr(expr, query.alias)
         }
         DB.MYSQL -> {
@@ -224,6 +235,27 @@ fun visitFunctionFindInSet(query: QueryExprFunction, dbType: DB): QueryExpr {
             "=",
             QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query.args[1], const(",")))))
         )
+        // TODO
+        else -> throw TypeCastException("暂不支持该数据库使用此函数")
+    }
+
+    return QueryExpr(getQueryExpr(function, dbType).expr, query.alias)
+}
+
+fun visitFunctionJsonLength(query: QueryExprFunction, dbType: DB): QueryExpr {
+    val arg0 = query.args[0]
+
+    val function = when (dbType) {
+        DB.MYSQL -> {
+            if (arg0 is QueryJson) {
+                QueryExprFunction("JSON_LENGTH", listOf(query.args[1], query.args[2]))
+            } else {
+                QueryExprFunction("JSON_LENGTH", listOf(arg0))
+            }
+        }
+        DB.PGSQL -> {
+            QueryExprFunction("JSONB_ARRAY_LENGTH", listOf(arg0))
+        }
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
     }
