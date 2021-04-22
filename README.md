@@ -121,7 +121,7 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
 
 4.因为Kotlin不支持自定义运算符的优先级，所以在使用and、or等符号，或者运算符的右侧为多个非const()包装的常量时，每一组运算都需要放在括号中（如果只是and条件，可以用多个where函数调用的方式）。<br>
 
-5.Java调用中缀函数时，比如 a eq b，需要写成eq(a, b)。<br>
+5.Java调用中缀函数时，需要import static 对应的dsl文件，并且把中缀调用改为前缀调用，比如 a eq b，需要写成eq(a, b)。<br>
 
 #### 其他操作符：
 支持inList(IN)、notInList(NOT IN)、like(LIKE)、notLike(NOT LIKE)、isNull(IS NULL)、isNotNull(IS NOT NULL)。
