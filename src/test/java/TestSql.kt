@@ -232,11 +232,11 @@ object TestSql {
 //        val select = Select().from("table").select(cast(column("a"), "char")).sql()
 //        println(select)
 
-//        val select = Select()
-//                .from("table")
-//                .select(jsonLength(column("json_col").json(0, DB.MYSQL).json("objs"), DB.MYSQL))
-//                .sql()
-//        println(select)
+        val select = Select(DB.PGSQL)
+                .from("table")
+                .select(column("json_col").json(0).json("objs").json(1))
+                .sql()
+        println(select)
 
 //        val select = Select(DB.PGSQL).from("table").select(findInSet("1", column("a"), DB.PGSQL)).sql()
 //        println(select)
@@ -276,9 +276,9 @@ object TestSql {
 //        val select = Select(DB.PGSQL).from(User).select(ifNull(User.name, "")).sql()
 //        println(select)
 
-        val select = Select(DB.PGSQL).from(User)
-            .select(arrayAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.name).orderByAsc(User.gender), true))
-            .sql()
-        println(select)
+//        val select = Select(DB.PGSQL).from(User)
+//            .select(arrayAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.name).orderByAsc(User.gender), true))
+//            .sql()
+//        println(select)
     }
 }
