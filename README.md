@@ -155,7 +155,7 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
     SELECT *
     FROM user
 
-此处的where第一个参数为一个返回值为Boolean的函数，当然也可以省略大括号，传入一个Boolean表达式。
+此处的where是一个高阶函数，第一个参数为一个返回值为Boolean的函数，当然也可以省略大括号，传入一个Boolean表达式。
 
 #### JOIN子句：
 支持的join类型有：join、innerJoin、leftJoin、rightJoin、crossJoin、fullJoin等。
