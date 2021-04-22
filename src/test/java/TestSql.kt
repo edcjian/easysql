@@ -23,7 +23,7 @@ object TestSql {
 
 //        val select = Select()
 //            .from(User)
-//            .select(count())
+//            .select(User.name, count())
 //            .groupBy(User.name)
 //            .sql()
 //        println(select)
