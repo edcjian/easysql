@@ -39,14 +39,14 @@ object TestSql {
 //            .sql()
 //        println(select)
 
-        val select = Select()
-                .from(User)
-                .where(User.gender inList listOf(1, 2))
-                .where(User.id between (1 to 10))
-                .where(User.name.isNotNull())
-                .where(User.name like "%xxx%")
-                .sql()
-        println(select)
+//        val select = Select()
+//                .from(User)
+//                .where(User.gender inList listOf(1, 2))
+//                .where(User.id between (1 to 10))
+//                .where(User.name.isNotNull())
+//                .where(User.name like "%xxx%")
+//                .sql()
+//        println(select)
 
 //        val userName: String? = null // 假如此处为用户传参
 //        val select = Select()

@@ -138,9 +138,10 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
 
     SELECT *
     FROM user
-    WHERE user.id IN (1, 2)
-        AND user.user_name IS NOT NULL
-        AND user.user_name LIKE '%xxx%'
+    WHERE user.gender IN (1, 2)
+    	AND user.id BETWEEN 1 AND 10
+    	AND user.user_name IS NOT NULL
+    	AND user.user_name LIKE '%xxx%'
         
 注：between函数中缀调用时，接受一个Pair二元组，两个值使用Kotlin的中缀函数to隔开，Java调用时可以使用.between(query, start, end)的方式。
 
