@@ -9,6 +9,7 @@ import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr
 import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr
 import com.alibaba.druid.sql.ast.statement.*
+import com.alibaba.druid.sql.visitor.VisitorFeature
 import dsl.*
 import expr.*
 import visitor.*
@@ -193,10 +194,10 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
 
     // todo 后续抽象出来一个高阶函数放到dsl中，Select实现高阶函数内容
     private fun join(
-        table: String,
-        alias: String? = null,
-        on: Query,
-        joinType: SQLJoinTableSource.JoinType
+            table: String,
+            alias: String? = null,
+            on: Query,
+            joinType: SQLJoinTableSource.JoinType
     ): Select {
         val join = SQLJoinTableSource()
         join.left = joinLeft
@@ -212,10 +213,10 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     private fun join(
-        table: SelectQuery,
-        alias: String? = null,
-        on: Query,
-        joinType: SQLJoinTableSource.JoinType
+            table: SelectQuery,
+            alias: String? = null,
+            on: Query,
+            joinType: SQLJoinTableSource.JoinType
     ): Select {
         val join = SQLJoinTableSource()
         join.left = joinLeft
@@ -306,7 +307,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         if (sqlSelect.selectList.isEmpty()) {
             select()
         }
-        return SQLUtils.toSQLString(sqlSelect, sqlSelect.dbType)
+        return SQLUtils.toSQLString(sqlSelect, sqlSelect.dbType, SQLUtils.FormatOption(), VisitorFeature.OutputNameQuote)
     }
 
     override fun getSelect(): SQLSelectQuery {
