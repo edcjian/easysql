@@ -63,17 +63,13 @@ fun visitQueryColumn(query: QueryColumn, dbType: DB): QueryExpr {
     }
 }
 
+val specialExprFunction = mapOf("*IFNULL" to ::visitFunctionIfNull,
+        "*FIND_IN_SET" to ::visitFunctionFindInSet,
+        "*JSON_LENGTH" to ::visitFunctionJsonLength)
+
 fun visitQueryExprFunction(query: QueryExprFunction, dbType: DB): QueryExpr {
-    if (query.name == "*IFNULL") {
-        return visitFunctionIfNull(query, dbType)
-    }
-
-    if (query.name == "*FIND_IN_SET") {
-        return visitFunctionFindInSet(query, dbType)
-    }
-
-    if (query.name == "*JSON_LENGTH") {
-        return visitFunctionJsonLength(query, dbType)
+    if (specialExprFunction.contains(query.name)) {
+        return specialExprFunction[query.name]!!.let { it(query, dbType) }
     }
 
     val expr = SQLMethodInvokeExpr()
@@ -86,13 +82,11 @@ fun visitQueryExprFunction(query: QueryExprFunction, dbType: DB): QueryExpr {
     return QueryExpr(expr, query.alias)
 }
 
-fun visitQueryAggFunction(query: QueryAggFunction, dbType: DB): QueryExpr {
-    if (query.name == "*STRING_AGG") {
-        return visitFunctionStringAgg(query, dbType)
-    }
+val specialAggFunction = mapOf("*STRING_AGG" to ::visitFunctionStringAgg, "*ARRAY_AGG" to ::visitFunctionArrayAgg)
 
-    if (query.name == "*ARRAY_AGG") {
-        return visitFunctionArrayAgg(query, dbType)
+fun visitQueryAggFunction(query: QueryAggFunction, dbType: DB): QueryExpr {
+    if (specialAggFunction.contains(query.name)) {
+        return specialAggFunction[query.name]!!.let { it(query, dbType) }
     }
 
     val expr = SQLAggregateExpr(query.name)
@@ -176,17 +170,17 @@ fun visitQueryJson(query: QueryJson, dbType: DB): QueryExpr {
 
             val cast = if (query.query is QueryJson) {
                 query.query
-            }else{
-                cast(query.query,"JSONB")
+            } else {
+                cast(query.query, "JSONB")
             }
 
             val expr =
-                SQLBinaryOpExpr(getQueryExpr(cast, dbType).expr, operator, valueExpr)
+                    SQLBinaryOpExpr(getQueryExpr(cast, dbType).expr, operator, valueExpr)
             QueryExpr(expr, query.alias)
         }
         DB.MYSQL -> {
             val expr =
-                SQLBinaryOpExpr(getQueryExpr(query.initQuery, dbType).expr, operator, SQLCharExpr(query.chain))
+                    SQLBinaryOpExpr(getQueryExpr(query.initQuery, dbType).expr, operator, SQLCharExpr(query.chain))
             QueryExpr(expr, query.alias)
         }
         else -> throw TypeCastException("Json操作暂不支持此数据库")
@@ -231,9 +225,9 @@ fun visitFunctionFindInSet(query: QueryExprFunction, dbType: DB): QueryExpr {
     val function = when (dbType) {
         DB.MYSQL -> QueryExprFunction("FIND_IN_SET", listOf(query.args[0], query.args[1]))
         DB.PGSQL -> QueryBinary(
-            cast(query.args[0], "VARCHAR"),
-            "=",
-            QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query.args[1], const(",")))))
+                cast(query.args[0], "VARCHAR"),
+                "=",
+                QueryExprFunction("ANY", listOf(QueryExprFunction("STRING_TO_ARRAY", listOf(query.args[1], const(",")))))
         )
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
@@ -266,17 +260,17 @@ fun visitFunctionJsonLength(query: QueryExprFunction, dbType: DB): QueryExpr {
 fun visitFunctionStringAgg(query: QueryAggFunction, dbType: DB): QueryExpr {
     val function = when (dbType) {
         DB.MYSQL -> QueryAggFunction(
-            "GROUP_CONCAT",
-            listOf(query.args[0]),
-            attributes = mapOf("SEPARATOR" to query.args[1]),
-            option = query.option,
-            orderBy = query.orderBy
+                "GROUP_CONCAT",
+                listOf(query.args[0]),
+                attributes = mapOf("SEPARATOR" to query.args[1]),
+                option = query.option,
+                orderBy = query.orderBy
         )
         DB.PGSQL -> QueryAggFunction(
-            "STRING_AGG",
-            listOf(cast(query.args[0], "VARCHAR"), query.args[1]),
-            option = query.option,
-            orderBy = query.orderBy
+                "STRING_AGG",
+                listOf(cast(query.args[0], "VARCHAR"), query.args[1]),
+                option = query.option,
+                orderBy = query.orderBy
         )
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
@@ -288,22 +282,22 @@ fun visitFunctionStringAgg(query: QueryAggFunction, dbType: DB): QueryExpr {
 fun visitFunctionArrayAgg(query: QueryAggFunction, dbType: DB): QueryExpr {
     val function = when (dbType) {
         DB.MYSQL -> QueryAggFunction(
-            "GROUP_CONCAT",
-            listOf(query.args[0]),
-            attributes = mapOf("SEPARATOR" to query.args[1]),
-            option = query.option,
-            orderBy = query.orderBy
+                "GROUP_CONCAT",
+                listOf(query.args[0]),
+                attributes = mapOf("SEPARATOR" to query.args[1]),
+                option = query.option,
+                orderBy = query.orderBy
         )
         DB.PGSQL -> QueryExprFunction(
-            "ARRAY_TO_STRING",
-            listOf(
-                QueryAggFunction(
-                    "ARRAY_AGG",
-                    listOf(cast(query.args[0], "VARCHAR")),
-                    option = query.option,
-                    orderBy = query.orderBy
-                ), query.args[1]
-            )
+                "ARRAY_TO_STRING",
+                listOf(
+                        QueryAggFunction(
+                                "ARRAY_AGG",
+                                listOf(cast(query.args[0], "VARCHAR")),
+                                option = query.option,
+                                orderBy = query.orderBy
+                        ), query.args[1]
+                )
         )
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
