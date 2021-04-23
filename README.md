@@ -339,7 +339,9 @@ concatWs的第一个参数为分隔符的字符串，其他同concat。
 
 #### 实验性特性：
 
-以下为一些函数和Json操作，目前还只支持mysql和pgsql。
+目前还只支持mysql和pgsql。<br><br>
+
+以下为一些函数和Json操作。
 
 **获取Json：**
 
