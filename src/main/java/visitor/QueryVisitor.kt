@@ -176,13 +176,12 @@ fun visitQueryJson(query: QueryJson, dbType: DB): QueryExpr {
                 cast(query.query, "JSONB")
             }
 
-            val expr =
-                    SQLBinaryOpExpr(getQueryExpr(cast, dbType).expr, operator, valueExpr)
+            val expr = SQLBinaryOpExpr(getQueryExpr(cast, dbType).expr, operator, valueExpr)
             QueryExpr(expr, query.alias)
         }
         DB.MYSQL -> {
-            val expr =
-                    SQLBinaryOpExpr(getQueryExpr(query.initQuery, dbType).expr, operator, SQLCharExpr(query.chain))
+            val visitMysql = visitMysqlQueryJson(query)
+            val expr = SQLBinaryOpExpr(getQueryExpr(visitMysql.second, dbType).expr, operator, SQLCharExpr(visitMysql.first))
             QueryExpr(expr, query.alias)
         }
         else -> throw TypeCastException("Json操作暂不支持此数据库")
@@ -252,7 +251,8 @@ fun visitFunctionJsonLength(query: QueryExprFunction, dbType: DB): QueryExpr {
     val function = when (dbType) {
         DB.MYSQL -> {
             if (arg0 is QueryJson) {
-                QueryExprFunction("JSON_LENGTH", listOf(query.args[1], query.args[2]))
+                val visitMysql = visitMysqlQueryJson(arg0)
+                QueryExprFunction("JSON_LENGTH", listOf(visitMysql.second, const(visitMysql.first)))
             } else {
                 QueryExprFunction("JSON_LENGTH", listOf(arg0))
             }
@@ -317,6 +317,29 @@ fun visitFunctionArrayAgg(query: QueryAggFunction, dbType: DB): QueryExpr {
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
     }
     return QueryExpr(getQueryExpr(function, dbType).expr, query.alias)
+}
+
+fun visitMysqlQueryJson(queryJson: QueryJson): Pair<String, Query> {
+    fun transMysqlJson(value: Any): String {
+        return when (value) {
+            is Number -> "[$value]"
+            is String -> ".$value"
+            else -> throw TypeCastException("取Json值时，表达式右侧只支持String或Int")
+        }
+    }
+
+    fun visit(queryJson: QueryJson): Pair<String, Query> {
+        val query = queryJson.query
+
+        if (query is QueryJson) {
+            val result = visit(query)
+            return Pair(result.first + transMysqlJson(query.value), result.second)
+        }
+        return Pair("", query)
+    }
+
+    val visitResult = visit(queryJson)
+    return Pair("$" + visitResult.first + transMysqlJson(queryJson.value), visitResult.second)
 }
 
 fun <T> getExpr(value: T): SQLExpr {

@@ -17,10 +17,10 @@ fun cast(query: Query, type: String): Query {
 }
 
 fun stringAgg(
-    query: Query,
-    separator: String,
-    orderBy: List<AggOrderBy> = listOf(),
-    distinct: Boolean = false
+        query: Query,
+        separator: String,
+        orderBy: List<AggOrderBy> = listOf(),
+        distinct: Boolean = false
 ): Query {
     val distinctType = if (distinct) {
         SQLAggregateOption.DISTINCT
@@ -31,10 +31,10 @@ fun stringAgg(
 }
 
 fun arrayAgg(
-    query: Query,
-    separator: String,
-    orderBy: List<AggOrderBy> = listOf(),
-    distinct: Boolean = false
+        query: Query,
+        separator: String,
+        orderBy: List<AggOrderBy> = listOf(),
+        distinct: Boolean = false
 ): Query {
     val distinctType = if (distinct) {
         SQLAggregateOption.DISTINCT
@@ -53,11 +53,7 @@ fun findInSet(value: String, query: Query): Query {
 }
 
 fun jsonLength(query: Query): Query {
-    return  if (query is QueryJson) {
-        QueryExprFunction("*JSON_LENGTH", listOf(query , query.initQuery, const(query.chain)))
-    } else {
-        QueryExprFunction("*JSON_LENGTH", listOf(query))
-    }
+    return QueryExprFunction("*JSON_LENGTH", listOf(query))
 }
 
 fun orderBy(order: SQLOrderingSpecification = SQLOrderingSpecification.ASC, vararg query: Query): List<AggOrderBy> {
@@ -73,21 +69,21 @@ fun orderByDesc(vararg query: Query): List<AggOrderBy> {
 }
 
 fun List<AggOrderBy>.orderBy(
-    order: SQLOrderingSpecification = SQLOrderingSpecification.ASC,
-    vararg query: Query
+        order: SQLOrderingSpecification = SQLOrderingSpecification.ASC,
+        vararg query: Query
 ): List<AggOrderBy> {
     val list = query.map { AggOrderBy(it, order) }
     return this + list
 }
 
 fun List<AggOrderBy>.orderByAsc(
-    vararg query: Query
+        vararg query: Query
 ): List<AggOrderBy> {
     return this.orderBy(SQLOrderingSpecification.ASC, *query)
 }
 
 fun List<AggOrderBy>.orderByDesc(
-    vararg query: Query
+        vararg query: Query
 ): List<AggOrderBy> {
     return this.orderBy(SQLOrderingSpecification.DESC, *query)
 }

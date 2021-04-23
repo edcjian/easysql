@@ -83,10 +83,8 @@ data class QueryTableColumn(val table: String, val column: String, override var 
 
 data class QueryJson(
         val query: Query,
-        val initQuery: Query,
         val operator: String,
         val value: Any,
-        val chain: String? = null,
         override var alias: String? = null
 ) : Query()
 
