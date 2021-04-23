@@ -9,7 +9,7 @@ object TestSql {
 //        val select = Select().from(User).sql()
 //        println(select)
 
-//        val select = Select().from(User).select(User.id, User.name alias "name").sql()
+//        val select = Select(DB.MYSQL).from(User).select(User.id, User.name alias "name").sql()
 //        println(select)
 
 //        测试sql注入

@@ -4,6 +4,7 @@ import com.alibaba.druid.sql.SQLUtils
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery
 import com.alibaba.druid.sql.ast.statement.SQLUnionOperator
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery
+import com.alibaba.druid.sql.visitor.VisitorFeature
 import visitor.getDbType
 import expr.DB
 
@@ -25,7 +26,7 @@ class UnionSelect(
         unionSelect.right = right.getSelect()
     }
 
-    override fun sql(): String = SQLUtils.toSQLString(unionSelect, unionSelect.dbType)
+    override fun sql(): String = SQLUtils.toSQLString(unionSelect, unionSelect.dbType, SQLUtils.FormatOption(), VisitorFeature.OutputNameQuote)
 
     override fun getSelect(): SQLSelectQuery {
         return this.unionSelect
