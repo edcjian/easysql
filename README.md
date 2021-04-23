@@ -143,7 +143,7 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
     	AND user.user_name IS NOT NULL
     	AND user.user_name LIKE '%xxx%'
         
-注：between函数中缀调用时，接受一个Pair二元组，两个值使用Kotlin的中缀函数to隔开，Java调用时可以使用.between(query, start, end)的方式。
+注：between函数中缀调用时，接受一个Pair二元组，两个值使用Kotlin的中缀函数to隔开，Java调用时可以使用between(query, start, end)的方式。
 
 #### 有条件的WHERE子句：
 有时候我们需要动态拼接条件，比如检验某个传入的参数不为空时才拼接，例如：
