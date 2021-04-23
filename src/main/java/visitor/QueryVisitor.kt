@@ -258,7 +258,11 @@ fun visitFunctionJsonLength(query: QueryExprFunction, dbType: DB): QueryExpr {
             }
         }
         DB.PGSQL -> {
-            QueryExprFunction("JSONB_ARRAY_LENGTH", listOf(arg0))
+            if (arg0 is QueryJson) {
+                QueryExprFunction("JSONB_ARRAY_LENGTH", listOf(arg0))
+            } else {
+                QueryExprFunction("JSONB_ARRAY_LENGTH", listOf(cast(arg0, "JSONB")))
+            }
         }
         // TODO
         else -> throw TypeCastException("暂不支持该数据库使用此函数")
