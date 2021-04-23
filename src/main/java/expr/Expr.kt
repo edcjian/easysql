@@ -104,7 +104,7 @@ data class QueryInSubQuery(
         override var alias: String? = null
 ) : Query()
 
-data class QueryBetween<T>(val query: Query, val start: T, val end: T, override var alias: String? = null) : Query()
+data class QueryBetween<T>(val query: Query, val start: T, val end: T, val isNot: Boolean = false, override var alias: String? = null) : Query()
 
 data class CaseBranch<T>(val query: Query, val then: T)
 

@@ -217,6 +217,7 @@ fun visitQueryBetween(query: QueryBetween<*>, dbType: DB): QueryExpr {
     expr.testExpr = getQueryExpr(query.query, dbType).expr
     expr.beginExpr = getExpr(query.start)
     expr.endExpr = getExpr(query.end)
+    expr.isNot = query.isNot
     return QueryExpr(expr)
 }
 

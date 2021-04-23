@@ -130,10 +130,14 @@ infix fun Query.xor(query: Query): QueryBinary {
 }
 
 infix fun <T> Query.between(value: Pair<T, T>): Query {
-    return QueryBetween(this, value.first, value.second)
+    return QueryBetween(this, value.first, value.second, true)
 }
 
 fun <T> Query.between(start: T, end: T): Query {
+    return QueryBetween(this, start, end)
+}
+
+fun <T> Query.notBetween(start: T, end: T): Query {
     return QueryBetween(this, start, end)
 }
 
