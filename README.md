@@ -124,7 +124,7 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
 5.Java调用中缀函数时，需要import static对应的dsl函数，并且把中缀调用改为前缀调用，比如 a eq b，需要写成eq(a, b)。<br>
 
 #### 其他操作符：
-支持inList(IN)、notInList(NOT IN)、like(LIKE)、notLike(NOT LIKE)、isNull(IS NULL)、isNotNull(IS NOT NULL)、between(BETWEEN)。
+支持inList(IN)、notInList(NOT IN)、like(LIKE)、notLike(NOT LIKE)、isNull(IS NULL)、isNotNull(IS NOT NULL)、between(BETWEEN)、notBetween(NOT BETWEEN)。
 
     val select = Select()
                 .from(User)
