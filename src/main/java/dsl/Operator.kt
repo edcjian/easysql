@@ -1,5 +1,6 @@
 package dsl
 
+import com.alibaba.druid.sql.ast.expr.SQLBetweenExpr
 import com.alibaba.druid.sql.ast.expr.SQLBinaryOperator
 import expr.*
 import select.SelectQuery
@@ -126,6 +127,14 @@ infix fun Query.or(query: Query): QueryBinary {
 
 infix fun Query.xor(query: Query): QueryBinary {
     return QueryBinary(this, "XOR", query)
+}
+
+infix fun <T> Query.between(value: Pair<T, T>): Query {
+    return QueryBetween(this, value.first, value.second)
+}
+
+fun <T> Query.between(start: T, end: T): Query {
+    return QueryBetween(this, start, end)
 }
 
 fun getBinaryOperator(operator: String): SQLBinaryOperator {

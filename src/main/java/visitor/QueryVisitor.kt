@@ -45,6 +45,8 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
 
         is QueryInSubQuery -> visitQueryInSubQuery(query, dbType)
 
+        is QueryBetween<*> -> visitQueryBetween(query, dbType)
+
         else -> throw TypeCastException("未找到对应的查询类型")
     }
 }
@@ -208,6 +210,14 @@ fun visitQueryInSubQuery(query: QueryInSubQuery, dbType: DB): QueryExpr {
     expr.isNot = query.isNot
     expr.expr = getQueryExpr(query.query, dbType).expr
     expr.subQuery = SQLSelect(query.subQuery.getSelect())
+    return QueryExpr(expr)
+}
+
+fun visitQueryBetween(query: QueryBetween<*>, dbType: DB): QueryExpr {
+    val expr = SQLBetweenExpr()
+    expr.testExpr = getQueryExpr(query.query, dbType).expr
+    expr.beginExpr = getExpr(query.start)
+    expr.endExpr = getExpr(query.end)
     return QueryExpr(expr)
 }
 
