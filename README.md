@@ -431,7 +431,7 @@ pgsql中使用：
 
 生成的sql语句：
 
-    SELECT JSONB_ARRAY_LENGTH(CAST(user.json_info AS JSONB) -> 0)
+    SELECT JSONB_ARRAY_LENGTH(CAST(user.json_info AS JSONB) -> 0 -> 'objs')
     FROM user
 
 **findInSet：**<br>
