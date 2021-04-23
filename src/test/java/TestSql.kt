@@ -12,6 +12,10 @@ object TestSql {
 //        val select = Select().from(User).select(User.id, User.name alias "name").sql()
 //        println(select)
 
+//        测试sql注入
+//        val select = Select().from(User).select(User.id).where(User.name eq "a or 1 = 1").sql()
+//        println(select)
+
 //        val select = Select()
 //            .from(User)
 //            .select(User.id alias "c1", User.name alias "c2")
