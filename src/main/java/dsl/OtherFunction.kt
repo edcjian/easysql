@@ -54,7 +54,7 @@ fun findInSet(value: String, query: Query): Query {
 
 fun jsonLength(query: Query): Query {
     return  if (query is QueryJson) {
-        QueryExprFunction("*JSON_LENGTH", listOf(query.query , query.initQuery, const(query.chain)))
+        QueryExprFunction("*JSON_LENGTH", listOf(query , query.initQuery, const(query.chain)))
     } else {
         QueryExprFunction("*JSON_LENGTH", listOf(query))
     }
