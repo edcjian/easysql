@@ -111,7 +111,7 @@ object TestSql {
 
 //        val select = Select(DB.PGSQL)
 //            .from(User)
-//            .select(User.jsonInfo.json(0).json("obj").jsonText("id"))
+//            .select(User.jsonInfo json 0 json "obj" jsonText "id")
 //            .sql()
 //        println(select)
 
@@ -129,5 +129,19 @@ object TestSql {
 
 //        val select = Select(DB.PGSQL).from(User).where(findInSet("1", User.ids)).sql()
 //        println(select)
+
+//        val select = Select()(listOf(User.id, count())) from
+//                User alias "u" where ((User.id eq 1) and (User.name like "%xxx%")) groupBy
+//                User.id orderByAsc User.id limit 10 offset 10
+//        println(select.sql())
+
+//        val select = Select() from User leftJoin
+//                (Select() from User1) alias "a" on
+//                (User.id eq column("a.id"))
+//        println(select.sql())
+
+        val select = (Select() select listOf(User.id alias "c1", User.name alias "c2") from
+                User where (User.id eq 1) orderByAsc User.name limit 10 offset 100).sql()
+        println(select)
     }
 }

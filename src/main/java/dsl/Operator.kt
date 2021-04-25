@@ -136,6 +136,10 @@ fun <T> Query.between(start: T, end: T): Query {
     return QueryBetween(this, start, end)
 }
 
+infix fun <T> Query.notBetween(value: Pair<T, T>): Query {
+    return QueryBetween(this, value.first, value.second, false)
+}
+
 fun <T> Query.notBetween(start: T, end: T): Query {
     return QueryBetween(this, start, end)
 }
