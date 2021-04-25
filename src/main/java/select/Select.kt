@@ -23,6 +23,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     private var dbType: DB = db
 
     init {
+        sqlSelect.addSelectItem(SQLAllColumnExpr())
         sqlSelect.dbType = getDbType(dbType)
     }
 
@@ -41,8 +42,27 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return this
     }
 
+    infix fun from(select: SelectQuery): Select {
+        return from(select, null)
+    }
+
     fun <T : TableSchema> from(table: T, alias: String? = null): Select {
         return from(table.tableName, alias)
+    }
+
+    infix fun <T : TableSchema> from(table: T): Select {
+        return from(table.tableName, null)
+    }
+
+    infix fun alias(name: String): Select {
+        val from = this.sqlSelect.from
+        if (from is SQLJoinTableSource) {
+            from.right.alias = name
+        } else {
+            from.alias = name
+        }
+
+        return this
     }
 
     fun distinct(): Select {
@@ -51,11 +71,40 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     fun select(vararg query: Query): Select {
+        if (this.sqlSelect.selectList.size == 1 && this.sqlSelect.selectList[0].expr is SQLAllColumnExpr) {
+            this.sqlSelect.selectList.clear()
+        }
         query.forEach {
             val queryExpr = getQueryExpr(it, this.dbType)
             sqlSelect.addSelectItem(queryExpr.expr, queryExpr.alias)
         }
         return this
+    }
+
+    infix operator fun invoke(query: List<Query>): Select {
+        return select(*query.toTypedArray())
+    }
+
+    infix operator fun invoke(query: Query): Select {
+        return select(*arrayOf(query))
+    }
+
+    infix fun select(query: List<Query>): Select {
+        return select(*query.toTypedArray())
+    }
+
+    infix fun select(query: Query): Select {
+        return select(*arrayOf(query))
+    }
+
+    infix fun selectDistinct(query: List<Query>): Select {
+        distinct()
+        return select(*query.toTypedArray())
+    }
+
+    infix fun selectDistinct(query: Query): Select {
+        distinct()
+        return select(*arrayOf(query))
     }
 
     fun select(): Select {
@@ -97,19 +146,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return this
     }
 
-    fun selectIfNull(query: Query, value: Query, alias: String? = null): Select {
-        var select = ifNull(query, value)
-        alias?.let { select = select alias it }
-        return select(select)
-    }
-
-    fun <T> selectIfNull(query: Query, value: T, alias: String? = null): Select {
-        var select = ifNull(query, const(value))
-        alias?.let { select = select alias it }
-        return select(select)
-    }
-
-    fun where(query: Query): Select {
+    infix fun where(query: Query): Select {
         sqlSelect.addCondition(getQueryExpr(query, this.dbType).expr)
         return this
     }
@@ -128,7 +165,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return this
     }
 
-    fun having(query: Query): Select {
+    infix fun having(query: Query): Select {
         sqlSelect.addHaving(getQueryExpr(query, this.dbType).expr)
         return this
     }
@@ -154,6 +191,14 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return this
     }
 
+    infix fun orderByAsc(columns: List<Query>): Select {
+        return orderByAsc(*columns.toTypedArray())
+    }
+
+    infix fun orderByAsc(column: Query): Select {
+        return orderByAsc(*arrayOf(column))
+    }
+
     fun orderByDesc(vararg columns: String): Select {
         orderBy(SQLOrderingSpecification.DESC, *columns.map { column(it) }.toTypedArray())
         return this
@@ -164,14 +209,27 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return this
     }
 
+    infix fun orderByDesc(columns: List<Query>): Select {
+        return orderByDesc(*columns.toTypedArray())
+    }
+
+    infix fun orderByDesc(column: Query): Select {
+        return orderByDesc(*arrayOf(column))
+    }
+
     fun limit(count: Int, offset: Int): Select {
         val sqlLimit = SQLLimit(SQLIntegerExpr(offset), SQLIntegerExpr(count))
         sqlSelect.limit = sqlLimit
         return this
     }
 
-    fun limit(count: Int): Select {
+    infix fun limit(count: Int): Select {
         return limit(count, 0)
+    }
+
+    infix fun offset(offset: Int): Select {
+        this.sqlSelect.limit.offset = SQLIntegerExpr(offset)
+        return this
     }
 
     fun groupBy(vararg columns: Query): Select {
@@ -187,16 +245,23 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         return this
     }
 
+    infix fun groupBy(column: Query): Select {
+        return groupBy(*arrayOf(column))
+    }
+
+    infix fun groupBy(columns: List<Query>): Select {
+        return groupBy(*columns.toTypedArray())
+    }
+
     fun groupBy(vararg columns: String): Select {
         val query = columns.map { QueryColumn(it) }.toTypedArray()
         return groupBy(*query)
     }
 
-    // todo 后续抽象出来一个高阶函数放到dsl中，Select实现高阶函数内容
     private fun join(
             table: String,
             alias: String? = null,
-            on: Query,
+            on: Query?,
             joinType: SQLJoinTableSource.JoinType
     ): Select {
         val join = SQLJoinTableSource()
@@ -205,8 +270,10 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         right.alias = alias
         join.right = right
         join.joinType = joinType
-        val condition = getQueryExpr(on, this.dbType).expr
-        join.condition = condition
+        if (on != null) {
+            val condition = getQueryExpr(on, this.dbType).expr
+            join.condition = condition
+        }
         sqlSelect.from = join
         joinLeft = join
         return this
@@ -215,7 +282,7 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     private fun join(
             table: SelectQuery,
             alias: String? = null,
-            on: Query,
+            on: Query?,
             joinType: SQLJoinTableSource.JoinType
     ): Select {
         val join = SQLJoinTableSource()
@@ -224,83 +291,141 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         tableSource.alias = alias
         join.right = tableSource
         join.joinType = joinType
-        val condition = getQueryExpr(on, this.dbType).expr
-        join.condition = condition
+        if (on != null) {
+            val condition = getQueryExpr(on, this.dbType).expr
+            join.condition = condition
+        }
         sqlSelect.from = join
         joinLeft = join
         return this
     }
 
-    fun join(table: String, alias: String? = null, on: Query): Select {
+    infix fun on(on: Query): Select {
+        val from = this.sqlSelect.from
+        if (from is SQLJoinTableSource) {
+            from.condition = getQueryExpr(on, this.dbType).expr
+        }
+        return this
+    }
+
+    fun join(table: String, alias: String? = null, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.JOIN)
     }
 
-    fun join(table: TableSchema, alias: String? = null, on: Query): Select {
+    fun join(table: TableSchema, alias: String? = null, on: Query? = null): Select {
         return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.JOIN)
     }
 
-    fun join(table: SelectQuery, alias: String?, on: Query): Select {
+    fun join(table: SelectQuery, alias: String?, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.JOIN)
     }
 
-    fun leftJoin(table: String, alias: String? = null, on: Query): Select {
+    infix fun join(table: TableSchema): Select {
+        return join(table.tableName, null, null, SQLJoinTableSource.JoinType.JOIN)
+    }
+
+    infix fun join(table: SelectQuery): Select {
+        return join(table, null, null, SQLJoinTableSource.JoinType.JOIN)
+    }
+
+    fun leftJoin(table: String, alias: String? = null, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.LEFT_OUTER_JOIN)
     }
 
-    fun leftJoin(table: TableSchema, alias: String? = null, on: Query): Select {
+    fun leftJoin(table: TableSchema, alias: String? = null, on: Query? = null): Select {
         return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.LEFT_OUTER_JOIN)
     }
 
-    fun leftJoin(table: SelectQuery, alias: String?, on: Query): Select {
+    fun leftJoin(table: SelectQuery, alias: String?, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.LEFT_OUTER_JOIN)
     }
 
-    fun rightJoin(table: String, alias: String? = null, on: Query): Select {
+    infix fun leftJoin(table: TableSchema): Select {
+        return join(table.tableName, null, null, SQLJoinTableSource.JoinType.LEFT_OUTER_JOIN)
+    }
+
+    infix fun leftJoin(table: SelectQuery): Select {
+        return join(table, null, null, SQLJoinTableSource.JoinType.LEFT_OUTER_JOIN)
+    }
+
+    fun rightJoin(table: String, alias: String? = null, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.RIGHT_OUTER_JOIN)
     }
 
-    fun rightJoin(table: TableSchema, alias: String? = null, on: Query): Select {
+    fun rightJoin(table: TableSchema, alias: String? = null, on: Query? = null): Select {
         return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.RIGHT_OUTER_JOIN)
     }
 
-    fun rightJoin(table: SelectQuery, alias: String?, on: Query): Select {
+    fun rightJoin(table: SelectQuery, alias: String?, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.RIGHT_OUTER_JOIN)
     }
 
-    fun innerJoin(table: String, alias: String? = null, on: Query): Select {
+    infix fun rightJoin(table: TableSchema): Select {
+        return join(table.tableName, null, null, SQLJoinTableSource.JoinType.RIGHT_OUTER_JOIN)
+    }
+
+    infix fun rightJoin(table: SelectQuery): Select {
+        return join(table, null, null, SQLJoinTableSource.JoinType.RIGHT_OUTER_JOIN)
+    }
+
+    fun innerJoin(table: String, alias: String? = null, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.INNER_JOIN)
     }
 
-    fun innerJoin(table: TableSchema, alias: String? = null, on: Query): Select {
+    fun innerJoin(table: TableSchema, alias: String? = null, on: Query? = null): Select {
         return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.INNER_JOIN)
     }
 
-    fun innerJoin(table: SelectQuery, alias: String?, on: Query): Select {
+    fun innerJoin(table: SelectQuery, alias: String?, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.INNER_JOIN)
     }
 
-    fun crossJoin(table: String, alias: String? = null, on: Query): Select {
+    infix fun innerJoin(table: TableSchema): Select {
+        return join(table.tableName, null, null, SQLJoinTableSource.JoinType.INNER_JOIN)
+    }
+
+    infix fun innerJoin(table: SelectQuery): Select {
+        return join(table, null, null, SQLJoinTableSource.JoinType.INNER_JOIN)
+    }
+
+    fun crossJoin(table: String, alias: String? = null, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.CROSS_JOIN)
     }
 
-    fun crossJoin(table: TableSchema, alias: String? = null, on: Query): Select {
+    fun crossJoin(table: TableSchema, alias: String? = null, on: Query? = null): Select {
         return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.CROSS_JOIN)
     }
 
-    fun crossJoin(table: SelectQuery, alias: String?, on: Query): Select {
+    fun crossJoin(table: SelectQuery, alias: String?, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.CROSS_JOIN)
     }
 
-    fun fullJoin(table: String, alias: String? = null, on: Query): Select {
+    infix fun crossJoin(table: TableSchema): Select {
+        return join(table.tableName, null, null, SQLJoinTableSource.JoinType.CROSS_JOIN)
+    }
+
+    infix fun crossJoin(table: SelectQuery): Select {
+        return join(table, null, null, SQLJoinTableSource.JoinType.CROSS_JOIN)
+    }
+
+    fun fullJoin(table: String, alias: String? = null, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.FULL_OUTER_JOIN)
     }
 
-    fun fullJoin(table: TableSchema, alias: String? = null, on: Query): Select {
+    fun fullJoin(table: TableSchema, alias: String? = null, on: Query? = null): Select {
         return join(table.tableName, alias, on, SQLJoinTableSource.JoinType.FULL_OUTER_JOIN)
     }
 
-    fun fullJoin(table: SelectQuery, alias: String?, on: Query): Select {
+    fun fullJoin(table: SelectQuery, alias: String?, on: Query? = null): Select {
         return join(table, alias, on, SQLJoinTableSource.JoinType.FULL_OUTER_JOIN)
+    }
+
+    infix fun fullJoin(table: TableSchema): Select {
+        return join(table.tableName, null, null, SQLJoinTableSource.JoinType.FULL_OUTER_JOIN)
+    }
+
+    infix fun fullJoin(table: SelectQuery): Select {
+        return join(table, null, null, SQLJoinTableSource.JoinType.FULL_OUTER_JOIN)
     }
 
     override fun sql(): String {
