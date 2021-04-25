@@ -70,10 +70,18 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
 #### 更贴近原生sql的调用方式：
 可以看到，上面的调用十分的简洁，但我们还可以做到更贴近原生sql：
 
-    val select = (Select() select listOf(User.id alias "c1", User.name alias "c2") from
-                    User where (User.id eq 1) orderByAsc User.name limit 10 offset 100).sql()
+    val select = Select() (User.name) from User where (User.gender eq 1) orderByAsc User.name limit 10 offset 100
+    println(select.sql())
 
-生成的sql语句同上，是不是很cool？这就是Kotlin中缀函数的魔力。<br>
+生成的sql语句：
+
+	SELECT user.user_name
+	FROM user
+	WHERE user.gender = 1
+	ORDER BY user.user_name ASC
+	LIMIT 10 OFFSET 100
+	
+是不是很cool？这就是Kotlin中缀函数的魔力。<br>
 但是遗憾的是，因为Kotlin暂时还不支持数组、集合、元组的字面量，所以中缀调用select、orderBy、groupBy等函数时，如果有多个字段需要用listOf函数包裹（单个字段可以省略listOf）<br><br>
 注：以下提供的绝大多数操作都支持中缀调用。
 
