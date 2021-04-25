@@ -28,8 +28,7 @@
     SELECT *
     FROM user
 
-注：<br>
-from函数第一个参数接收一个TableSchema的子类或者一个字符串，第二个参数为别名，可不传。
+注：from函数第一个参数接收一个TableSchema的子类或者一个字符串，第二个参数为别名，可不传。
 
 #### 支持筛选列：
 
@@ -82,7 +81,7 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
 	LIMIT 10 OFFSET 100
 	
 是不是很cool？这就是Kotlin中缀函数的魔力。<br>
-但是遗憾的是，因为Kotlin暂时还不支持数组、集合、元组的字面量，所以中缀调用select、orderBy、groupBy等函数时，如果有多个字段需要用listOf函数包裹（单个字段可以省略listOf）<br><br>
+但是遗憾的是，因为Kotlin暂时还不支持数组、集合、元组的字面量，所以中缀调用select、orderBy、groupBy等函数时，如果有多个字段需要用listOf函数包裹（单个字段可以省略listOf），我们暂时无法做到更简洁。<br><br>
 注：以下提供的绝大多数操作都支持中缀调用。
 
 #### 跨数据库支持：
