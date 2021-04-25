@@ -7,6 +7,7 @@
 6.**在此感谢温绍锦先生和他的团队开发出了如此优秀的跨数据库sql parser。**
 ## 快速开始
 #### 来看一个构建简单sql的例子：
+注：**以下出现的查询仅为了演示构造器功能，不具有任何实际意义。**
 
 在实体类中添加Kotlin伴生对象，并继承TableSchema类，例如：
 
@@ -166,7 +167,7 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
 
     val select = Select()
                 .from(User)
-                .leftJoin(User1,on = User.id eq User1.id)
+                .leftJoin(User1, on = User.id eq User1.id)
                 .sql()
 
 生成的sql语句：
@@ -232,13 +233,13 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
 
 **from中的子查询：**
 
-    val select = Select().from(Select().from(User)).sql()
+    val select = Select().from(Select().select().from(User)).sql()
 
 生成的sql语句：
 
     SELECT *
     FROM (
-	    SELECT 
+	    SELECT *
 	    FROM user
     )
 
@@ -246,7 +247,7 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
 
     val select = Select()
                 .from("t1")
-                .leftJoin(Select().from("t2").limit(1), alias = "t2", on = column("t1.id") eq column("t2.id"))
+                .leftJoin(Select().select().from("t2").limit(1), alias = "t2", on = column("t1.id") eq column("t2.id"))
                 .sql()
 
 生成的sql语句：
@@ -254,7 +255,7 @@ from函数第一个参数接收一个TableSchema的子类或者一个字符串�
     SELECT *
     FROM t1
 	    LEFT JOIN (
-		    SELECT 
+		    SELECT *
 		    FROM t2
 		    LIMIT 0, 1
 	    ) t2
