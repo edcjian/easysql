@@ -129,7 +129,7 @@ infix fun Query.xor(query: Query): QueryBinary {
 }
 
 infix fun <T> Query.between(value: Pair<T, T>): Query {
-    return QueryBetween(this, value.first, value.second, true)
+    return QueryBetween(this, value.first, value.second)
 }
 
 fun <T> Query.between(start: T, end: T): Query {
@@ -137,11 +137,11 @@ fun <T> Query.between(start: T, end: T): Query {
 }
 
 infix fun <T> Query.notBetween(value: Pair<T, T>): Query {
-    return QueryBetween(this, value.first, value.second, false)
+    return QueryBetween(this, value.first, value.second, true)
 }
 
 fun <T> Query.notBetween(start: T, end: T): Query {
-    return QueryBetween(this, start, end)
+    return QueryBetween(this, start, end, true)
 }
 
 fun getBinaryOperator(operator: String): SQLBinaryOperator {

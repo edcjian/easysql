@@ -42,7 +42,7 @@ object TestSql {
 //        val select = Select()
 //                .from(User)
 //                .where(User.gender inList listOf(1, 2))
-//                .where(User.id between (1 to 10))
+//                .where(User.id notBetween (1 to 10))
 //                .where(User.name.isNotNull())
 //                .where(User.name like "%xxx%")
 //                .sql()
@@ -140,8 +140,8 @@ object TestSql {
 //                (User.id eq column("a.id"))
 //        println(select.sql())
 
-        val select = (Select() select listOf(User.id alias "c1", User.name alias "c2") from
-                User where (User.id eq 1) orderByAsc User.name limit 10 offset 100).sql()
-        println(select)
+//        val select = Select() select listOf(User.id alias "c1", User.name alias "c2") from
+//                User where (User.id eq 1) orderByAsc User.name limit 10 offset 100
+//        println(select.sql())
     }
 }
