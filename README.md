@@ -21,14 +21,15 @@
 ```
 
 使用链式调用：
-
+```kotlin
     val select = Select().from(User).sql()
+```
 
 生成的sql语句：
-
+```sql
     SELECT *
     FROM user
-
+```
 注：from函数第一个参数接收一个TableSchema的子类或者一个字符串，第二个参数为别名，可不传。
 
 #### 支持筛选列：
