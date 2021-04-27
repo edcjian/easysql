@@ -33,105 +33,105 @@ FROM user
 注：from函数第一个参数接收一个TableSchema的子类或者一个字符串，第二个参数为别名，可不传。
 
 #### 支持筛选列：
-
-    val select = Select().from(User).select(User.id, User.name alias "name").sql()
-
+```kotlin
+val select = Select().from(User).select(User.id, User.name alias "name").sql()
+```
 生成的sql语句：
-
-    SELECT user.id, user.user_name AS name
-    FROM user
-
+```sql
+SELECT user.id, user.user_name AS name
+FROM user
+```
 注：<br>
 1.select可以接收若干个字符串、用column包裹的对象属性，也可以接收若干个复杂查询（后文会介绍）。<br>
 2.此处的alias是对String类和Query类（内置查询类型的父类）实现的扩展函数，使用了Kotlin的扩展函数和中缀函数语法，用来起别名（数据库的AS子句）。<br>
 3.此处的User.id，在Java中要使用User.Companion.getId()的方式获取。
 
 #### 当然也支持SELECT语句的各种功能：
-
-    val select = Select()
-                .from(User)
-                .select(User.id alias "c1", User.name alias "c2")
-                .where(User.id eq 1)
-                .orderByAsc(User.name)
-                .limit(10, 100)
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.select(User.id alias "c1", User.name alias "c2")
+			.where(User.id eq 1)
+			.orderByAsc(User.name)
+			.limit(10, 100)
+			.sql()
+```
 生成的sql语句：
-
-    SELECT user.id AS c1, user.user_name AS c2
-    FROM user
-    WHERE user.id = 1
-    ORDER BY user.user_name ASC
-    LIMIT 100, 10
-
+```sql
+SELECT user.id AS c1, user.user_name AS c2
+FROM user
+WHERE user.id = 1
+ORDER BY user.user_name ASC
+LIMIT 100, 10
+```
 注：<br>
 1.where中使用链式调用的语法，后文会介绍。<br>
 2.提供orderByAsc和orderByDesc两个函数排序。
 
 #### 更贴近原生sql的调用方式：
 可以看到，上面的调用十分的简洁，但我们还可以做到更贴近原生sql：
-
-    val select = Select() (User.name) from User where (User.gender eq 1) orderByAsc User.name limit 10 offset 100
-    println(select.sql())
-
+```kotlin
+val select = Select() (User.name) from User where (User.gender eq 1) orderByAsc User.name limit 10 offset 100
+select.sql()
+```
 生成的sql语句：
-
-	SELECT user.user_name
-	FROM user
-	WHERE user.gender = 1
-	ORDER BY user.user_name ASC
-	LIMIT 10 OFFSET 100
-	
+```sql
+SELECT user.user_name
+FROM user
+WHERE user.gender = 1
+ORDER BY user.user_name ASC
+LIMIT 10 OFFSET 100
+```
 是不是很cool？这就是Kotlin中缀函数的魔力。<br>
 但是遗憾的是，因为Kotlin暂时还不支持数组、集合、元组的字面量，所以中缀调用select、orderBy、groupBy等函数时，如果有多个字段需要用listOf函数包裹（单个字段可以省略listOf），我们暂时无法做到更简洁。<br><br>
 注：以下提供的绝大多数操作都支持中缀调用。
 
 #### 跨数据库支持：
 创建Select对象的时候可以指定数据库类型（默认为mysql）：
-
-    val select = Select(DB.PGSQL)
-                .from(User)
-                .limit(10, 100)
-                .sql()
-
+```kotlin
+val select = Select(DB.PGSQL)
+			.from(User)
+			.limit(10, 100)
+			.sql()
+```
 生成的sql语句：
-
-    SELECT *
-    FROM user
-    LIMIT 10 OFFSET 100
-
+```sql
+SELECT *
+FROM user
+LIMIT 10 OFFSET 100
+```
 #### 聚合函数：
-
-    val select = Select()
-                .from(User)
-                .select(User.name, count())
-                .groupBy(User.name)
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.select(User.name, count())
+			.groupBy(User.name)
+			.sql()
+```
 生成的sql语句：
-
-    SELECT user.user_name, COUNT(*)
-    FROM user
-    GROUP BY user.user_name
-
+```sql
+SELECT user.user_name, COUNT(*)
+FROM user
+GROUP BY user.user_name
+```
 支持的聚合函数有count、countDistinct、sum、avg、max、min。
 
 #### 二元操作符：
 可以使用二元操作符构建复杂的sql语句：
-
-    val select = Select()
-                .from(User)
-                .select((User.id + User.gender) / 2 alias "col")
-                .where((User.id eq 1) and (User.gender eq 2))
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.select((User.id + User.gender) / 2 alias "col")
+			.where((User.id eq 1) and (User.gender eq 2))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT (user.id + user.gender) / 2 AS col
-    FROM user
-    WHERE user.id = 1
-    AND user.gender = 2
-
+```sql
+SELECT (user.id + user.gender) / 2 AS col
+FROM user
+WHERE user.id = 1
+AND user.gender = 2
+```
 注：<br>
 1.计算用的二元操作符（+、-、*、/、%）使用Kotlin的运算符重载，因为Java中不支持此功能，所以Java调用的时候需要使用.plus()等方式。<br>
 
@@ -145,159 +145,159 @@ FROM user
 
 #### 其他操作符：
 支持inList(IN)、notInList(NOT IN)、like(LIKE)、notLike(NOT LIKE)、isNull(IS NULL)、isNotNull(IS NOT NULL)、between(BETWEEN)、notBetween(NOT BETWEEN)。
-
-    val select = Select()
-                .from(User)
-                .where(User.gender inList listOf(1, 2))
-                .where(User.id between (1 to 10))
-                .where(User.name.isNotNull())
-                .where(User.name like "%xxx%")
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.where(User.gender inList listOf(1, 2))
+			.where(User.id between (1 to 10))
+			.where(User.name.isNotNull())
+			.where(User.name like "%xxx%")
+			.sql()
+```
 生成的sql语句：
-
-    SELECT *
-    FROM user
-    WHERE user.gender IN (1, 2)
-    	AND user.id BETWEEN 1 AND 10
-    	AND user.user_name IS NOT NULL
-    	AND user.user_name LIKE '%xxx%'
-        
+```sql
+SELECT *
+FROM user
+WHERE user.gender IN (1, 2)
+	AND user.id BETWEEN 1 AND 10
+	AND user.user_name IS NOT NULL
+	AND user.user_name LIKE '%xxx%'
+```
 注：between函数中缀调用时，接受一个Pair二元组，两个值使用Kotlin的中缀函数to隔开，Java调用时可以使用between(query, start, end)的方式。
 
 #### 有条件的WHERE子句：
 有时候我们需要动态拼接条件，比如检验某个传入的参数不为空时才拼接，例如：
-
-    val userName: String? = null // 假设此处为用户传参
-    val select = Select()
-                .from(User)
-                .where({ !userName.isNullOrEmpty() }, User.name eq userName)
-                .sql()
-
+```kotlin
+val userName: String? = null // 假设此处为用户传参
+val select = Select()
+			.from(User)
+			.where({ !userName.isNullOrEmpty() }, User.name eq userName)
+			.sql()
+```
 生成的sql语句：
-
-    SELECT *
-    FROM user
-
+```sql
+SELECT *
+FROM user
+```
 此处的where是一个高阶函数，第一个参数为一个返回值为Boolean的函数，当然也可以省略大括号，传入一个Boolean表达式。
 
 #### JOIN子句：
 支持的join类型有：join、innerJoin、leftJoin、rightJoin、crossJoin、fullJoin等。
-
-    val select = Select()
-                .from(User)
-                .leftJoin(User1, on = User.id eq User1.id)
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.leftJoin(User1, on = User.id eq User1.id)
+			.sql()
+```
 生成的sql语句：
-
-    SELECT *
-    FROM user
-        LEFT JOIN user1 ON user.id = user1.id
-
+```sql
+SELECT *
+FROM user
+	LEFT JOIN user1 ON user.id = user1.id
+```
 #### CASE WHEN子句：
 使用case()函数和中缀函数then与elseIs构建一个CASE WHEN子句：
-
-    val select = Select()
-                .from(User)
-                .select(case(User.gender eq 1 then "男", User.gender eq 2 then "女") elseIs "其他" alias "gender")
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.select(case(User.gender eq 1 then "男", User.gender eq 2 then "女") elseIs "其他" alias "gender")
+			.sql()
+```
 生成的sql语句：
-
-    SELECT CASE 
-		    WHEN user.gender = 1 THEN '男'
-		    WHEN user.gender = 2 THEN '女'
-		    ELSE '其他'
-	    END AS gender
-    FROM user
-
+```sql
+SELECT CASE 
+		WHEN user.gender = 1 THEN '男'
+		WHEN user.gender = 2 THEN '女'
+		ELSE '其他'
+	END AS gender
+FROM user
+```
 当然case()函数也可以传入count()和sum()中：
-
-    val case = case(User.gender eq 1 then User.gender) elseIs null
-    val select = Select()
-                .from(User)
-                .select(count(case) alias "male_count")
-                .sql()
-
+```kotlin
+val case = case(User.gender eq 1 then User.gender) elseIs null
+val select = Select()
+			.from(User)
+			.select(count(case) alias "male_count")
+			.sql()
+```
 生成的sql语句：
-
-    SELECT COUNT(CASE 
-		    WHEN user.gender = 1 THEN user.gender
-		    ELSE NULL
-	    END) AS male_count
-    FROM user
-
+```sql
+SELECT COUNT(CASE 
+		WHEN user.gender = 1 THEN user.gender
+		ELSE NULL
+	END) AS male_count
+FROM user
+```
 #### UNION和UNION ALL：
-
-    val select = (Select().from(User).select(User.id) union
-                Select().from(User).select(User.id) unionAll
-                Select().from(User).select(User.id)).sql()
-
+```kotlin
+val select = (Select().from(User).select(User.id) union
+			Select().from(User).select(User.id) unionAll
+			Select().from(User).select(User.id)).sql()
+```
 生成的sql语句：
-
-    SELECT user.id
-    FROM user
-    UNION
-    SELECT user.id
-    FROM user
-    UNION ALL
-    SELECT user.id
-    FROM user
-
+```sql
+SELECT user.id
+FROM user
+UNION
+SELECT user.id
+FROM user
+UNION ALL
+SELECT user.id
+FROM user
+```
 注：union右侧创建的Select对象的数据库类型取决于union左侧的Select对象。
 
 #### 子查询：
 支持from、join、各种操作符的**右侧**使用子查询：
 
 **from中的子查询：**
-
-    val select = Select().from(Select().select().from(User)).sql()
-
+```kotlin
+val select = Select().from(Select().select().from(User)).sql()
+```
 生成的sql语句：
-
-    SELECT *
-    FROM (
-	    SELECT *
-	    FROM user
-    )
-
+```sql
+SELECT *
+FROM (
+	SELECT *
+	FROM user
+)
+```
 **join中的子查询：**
-
-    val select = Select()
-                .from("t1")
-                .leftJoin(Select().select().from("t2").limit(1), alias = "t2", on = column("t1.id") eq column("t2.id"))
-                .sql()
-
+```kotlin
+val select = Select()
+			.from("t1")
+			.leftJoin(Select().select().from("t2").limit(1), alias = "t2", on = column("t1.id") eq column("t2.id"))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT *
-    FROM t1
-	    LEFT JOIN (
-		    SELECT *
-		    FROM t2
-		    LIMIT 0, 1
-	    ) t2
-	    ON t1.id = t2.id
-
+```sql
+SELECT *
+FROM t1
+	LEFT JOIN (
+		SELECT *
+		FROM t2
+		LIMIT 0, 1
+	) t2
+	ON t1.id = t2.id
+```
 注：join中的子查询因为Kotlin语法限制，如果需要起别名，不要使用对象映射。
 
 **操作符右侧的子查询：**
-
-    val select = Select()
-                .from(User)
-                .select(User.id inList Select().from(User).select(User.id).limit(10))
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.select(User.id inList Select().from(User).select(User.id).limit(10))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT user.id IN (
-		    SELECT user.id
-		    FROM user
-		    LIMIT 0, 10
-	    )
-    FROM user
-
+```sql
+SELECT user.id IN (
+		SELECT user.id
+		FROM user
+		LIMIT 0, 10
+	)
+FROM user
+```
 #### 常用数据库函数：
 
 **concat和concatWs：**
@@ -305,19 +305,19 @@ FROM user
 用于字符串拼接。<br>
 concat是一个可变长参数的函数，接收的参数为各种字段、常量等Query的子类型。<br>
 concatWs的第一个参数为分隔符的字符串，其他同concat。
-
-    val select = Select()
-                .from(User)
-                .select(concat(User.id, const(","), User.name))
-                .select(concatWs(",", User.id, User.name))
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.select(concat(User.id, const(","), User.name))
+			.select(concatWs(",", User.id, User.name))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT CONCAT(user.id, ',', user.user_name)
-        , CONCAT_WS(',', user.id, user.user_name)
-    FROM user
-
+```sql
+SELECT CONCAT(user.id, ',', user.user_name)
+	, CONCAT_WS(',', user.id, user.user_name)
+FROM user
+```
 注：以上函数暂不支持oracle。
 
 **ifNull：**
@@ -327,17 +327,17 @@ concatWs的第一个参数为分隔符的字符串，其他同concat。
 第二个参数为Query的子类型，代表前面的表达式为空时选择的值。<br>
 
 例子：有些时候我们需要检测sum返回的结果是否是空值，可以使用ifNull函数：
-
-    val select = Select()
-                .from(User)
-                .select(ifNull(sum(User.age), 0))
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.select(ifNull(sum(User.age), 0))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT IFNULL(SUM(user.age), 0)
-    FROM user
-
+```sql
+SELECT IFNULL(SUM(user.age), 0)
+FROM user
+```
 注：因为每个数据库的函数差别比较大，所以转换出来的函数都不相同。
 
 **cast：**
@@ -347,14 +347,14 @@ concatWs的第一个参数为分隔符的字符串，其他同concat。
 第二个参数为String，为想转换的数据类型。
 
 例子：
-
-    val select = Select().from(User).select(cast(User.id, "CHAR")).sql()
-
+```kotlin
+val select = Select().from(User).select(cast(User.id, "CHAR")).sql()
+```
 生成的sql语句：
-
-    SELECT CAST(user.id AS CHAR)
-    FROM user
-
+```sql
+SELECT CAST(user.id AS CHAR)
+FROM user
+```
 注：因为各个数据库的类型系统差异较大，如果你的应用需要跨不同的数据库，使用时需要谨慎。
 
 #### 实验性特性：
@@ -366,29 +366,29 @@ concatWs的第一个参数为分隔符的字符串，其他同concat。
 **获取Json：**
 
 使用json（数据库的->操作符）和jsonText(数据库的->>操作符)函数来获取Json数据（支持使用Int下标或者String对象名获取）：
-
-    val select = Select()
-                .from(User)
-                .select(User.jsonInfo.json(0).json("obj").jsonText("id"))
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.select(User.jsonInfo.json(0).json("obj").jsonText("id"))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT user.json_info ->> '$[0].obj.id'
-    FROM user
-
+```sql
+SELECT user.json_info ->> '$[0].obj.id'
+FROM user
+```
 pgsql中使用：
-
-    val select = Select(DB.PGSQL)
-                .from(User)
-                .select(User.jsonInfo.json(0).json("obj").jsonText("id"))
-                .sql()
-
+```kotlin
+val select = Select(DB.PGSQL)
+			.from(User)
+			.select(User.jsonInfo.json(0).json("obj").jsonText("id"))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT CAST(user.json_info AS JSONB) -> 0 -> 'obj' ->> 'id'
-    FROM user
-
+```sql
+SELECT CAST(user.json_info AS JSONB) -> 0 -> 'obj' ->> 'id'
+FROM user
+```
 注：mysql最终生成的操作符取决于调用链的最后一次操作。
 
 **stringAgg：**<br>
@@ -400,29 +400,29 @@ pgsql中使用：
 第四个参数为可选参数，Boolean类型，为是否使用DISTINCT，默认为false。
 
 例子：
-
-    val select = Select()
-                .from(User)
-                .select(stringAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.gender), true))
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.select(stringAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.gender), true))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT GROUP_CONCAT(DISTINCT user.user_name ORDER BY user.id ASC, user.gender DESC SEPARATOR ',')
-    FROM user
-
+```sql
+SELECT GROUP_CONCAT(DISTINCT user.user_name ORDER BY user.id ASC, user.gender DESC SEPARATOR ',')
+FROM user
+```
 pgsql中使用：
-
-    val select = Select(DB.PGSQL)
-                .from(User)
-                .select(stringAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.gender), true))
-                .sql()
-
+```kotlin
+val select = Select(DB.PGSQL)
+			.from(User)
+			.select(stringAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.gender), true))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT STRING_AGG(DISTINCT CAST(user.user_name AS VARCHAR), ',' ORDER BY user.id ASC, user.gender DESC)
-    FROM user
-
+```sql
+SELECT STRING_AGG(DISTINCT CAST(user.user_name AS VARCHAR), ',' ORDER BY user.id ASC, user.gender DESC)
+FROM user
+```
 
 **arrayAgg：**<br>
 使用方式同上，在pgsql中生成的sql为ARRAY_TO_STRING(ARRAY_AGG())形式。
@@ -433,29 +433,29 @@ pgsql中使用：
 参数为Json调用链或一个Query的子类型。<br>
 
 例子：
-
-    val select = Select()
-                .from(User)
-                .select(jsonLength(User.jsonInfo.json(0).json("objs")))
-                .sql()
-
+```kotlin
+val select = Select()
+			.from(User)
+			.select(jsonLength(User.jsonInfo.json(0).json("objs")))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT JSON_LENGTH(user.json_info, '$[0].objs')
-    FROM user
-
+```sql
+SELECT JSON_LENGTH(user.json_info, '$[0].objs')
+FROM user
+```
 pgsql中使用：
-
-    val select = Select(DB.PGSQL)
-                .from(User)
-                .select(jsonLength(User.jsonInfo.json(0).json("objs")))
-                .sql()
-
+```kotlin
+val select = Select(DB.PGSQL)
+			.from(User)
+			.select(jsonLength(User.jsonInfo.json(0).json("objs")))
+			.sql()
+```
 生成的sql语句：
-
-    SELECT JSONB_ARRAY_LENGTH(CAST(user.json_info AS JSONB) -> 0 -> 'objs')
-    FROM user
-
+```sql
+SELECT JSONB_ARRAY_LENGTH(CAST(user.json_info AS JSONB) -> 0 -> 'objs')
+FROM user
+```
 **findInSet：**<br>
 
 用于查询元素是否在某个以","隔开的字符串中。<br>
@@ -463,25 +463,25 @@ pgsql中使用：
 第二个参数为Query的子类型，为需要查询的集合。<br>
 
 例子：
-
-    val select = Select().from(User).where(findInSet("1", User.ids)).sql()
-
+```kotlin
+val select = Select().from(User).where(findInSet("1", User.ids)).sql()
+```
 生成的sql语句：
-
-    SELECT *
-    FROM user
-    WHERE FIND_IN_SET('1', user.ids)
-
+```sql
+SELECT *
+FROM user
+WHERE FIND_IN_SET('1', user.ids)
+```
 pgsql中使用：
-
-    val select = Select(DB.PGSQL).from(User).where(findInSet("1", User.ids)).sql()
-
+```kotlin
+val select = Select(DB.PGSQL).from(User).where(findInSet("1", User.ids)).sql()
+```
 生成的sql语句：
-
-    SELECT *
-    FROM user
-    WHERE CAST('1' AS VARCHAR) = ANY(STRING_TO_ARRAY(user.ids, ','))
-
+```sql
+SELECT *
+FROM user
+WHERE CAST('1' AS VARCHAR) = ANY(STRING_TO_ARRAY(user.ids, ','))
+```
 ## 结语：
 **此项目旨在为开发者提供一个流畅的sql构建工具，希望能帮助到使用此项目的开发者。**<br>
 **子查询、join、函数等，在使用时需要慎重，希望大家能写出高质量的sql。**<br>
