@@ -49,12 +49,12 @@ FROM user
 #### 当然也支持SELECT语句的各种功能：
 ```kotlin
 val select = Select()
-			.from(User)
-			.select(User.id alias "c1", User.name alias "c2")
-			.where(User.id eq 1)
-			.orderByAsc(User.name)
-			.limit(10, 100)
-			.sql()
+		.from(User)
+		.select(User.id alias "c1", User.name alias "c2")
+		.where(User.id eq 1)
+		.orderByAsc(User.name)
+		.limit(10, 100)
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -90,9 +90,9 @@ LIMIT 10 OFFSET 100
 创建Select对象的时候可以指定数据库类型（默认为mysql）：
 ```kotlin
 val select = Select(DB.PGSQL)
-			.from(User)
-			.limit(10, 100)
-			.sql()
+		.from(User)
+		.limit(10, 100)
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -103,10 +103,10 @@ LIMIT 10 OFFSET 100
 #### 聚合函数：
 ```kotlin
 val select = Select()
-			.from(User)
-			.select(User.name, count())
-			.groupBy(User.name)
-			.sql()
+		.from(User)
+		.select(User.name, count())
+		.groupBy(User.name)
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -120,10 +120,10 @@ GROUP BY user.user_name
 可以使用二元操作符构建复杂的sql语句：
 ```kotlin
 val select = Select()
-			.from(User)
-			.select((User.id + User.gender) / 2 alias "col")
-			.where((User.id eq 1) and (User.gender eq 2))
-			.sql()
+		.from(User)
+		.select((User.id + User.gender) / 2 alias "col")
+		.where((User.id eq 1) and (User.gender eq 2))
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -147,12 +147,12 @@ AND user.gender = 2
 支持inList(IN)、notInList(NOT IN)、like(LIKE)、notLike(NOT LIKE)、isNull(IS NULL)、isNotNull(IS NOT NULL)、between(BETWEEN)、notBetween(NOT BETWEEN)。
 ```kotlin
 val select = Select()
-			.from(User)
-			.where(User.gender inList listOf(1, 2))
-			.where(User.id between (1 to 10))
-			.where(User.name.isNotNull())
-			.where(User.name like "%xxx%")
-			.sql()
+		.from(User)
+		.where(User.gender inList listOf(1, 2))
+		.where(User.id between (1 to 10))
+		.where(User.name.isNotNull())
+		.where(User.name like "%xxx%")
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -170,9 +170,9 @@ WHERE user.gender IN (1, 2)
 ```kotlin
 val userName: String? = null // 假设此处为用户传参
 val select = Select()
-			.from(User)
-			.where({ !userName.isNullOrEmpty() }, User.name eq userName)
-			.sql()
+		.from(User)
+		.where({ !userName.isNullOrEmpty() }, User.name eq userName)
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -185,9 +185,9 @@ FROM user
 支持的join类型有：join、innerJoin、leftJoin、rightJoin、crossJoin、fullJoin等。
 ```kotlin
 val select = Select()
-			.from(User)
-			.leftJoin(User1, on = User.id eq User1.id)
-			.sql()
+		.from(User)
+		.leftJoin(User1, on = User.id eq User1.id)
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -199,9 +199,9 @@ FROM user
 使用case()函数和中缀函数then与elseIs构建一个CASE WHEN子句：
 ```kotlin
 val select = Select()
-			.from(User)
-			.select(case(User.gender eq 1 then "男", User.gender eq 2 then "女") elseIs "其他" alias "gender")
-			.sql()
+		.from(User)
+		.select(case(User.gender eq 1 then "男", User.gender eq 2 then "女") elseIs "其他" alias "gender")
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -216,9 +216,9 @@ FROM user
 ```kotlin
 val case = case(User.gender eq 1 then User.gender) elseIs null
 val select = Select()
-			.from(User)
-			.select(count(case) alias "male_count")
-			.sql()
+		.from(User)
+		.select(count(case) alias "male_count")
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -265,9 +265,9 @@ FROM (
 **join中的子查询：**
 ```kotlin
 val select = Select()
-			.from("t1")
-			.leftJoin(Select().select().from("t2").limit(1), alias = "t2", on = column("t1.id") eq column("t2.id"))
-			.sql()
+		.from("t1")
+		.leftJoin(Select().select().from("t2").limit(1), alias = "t2", on = column("t1.id") eq column("t2.id"))
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -285,9 +285,9 @@ FROM t1
 **操作符右侧的子查询：**
 ```kotlin
 val select = Select()
-			.from(User)
-			.select(User.id inList Select().from(User).select(User.id).limit(10))
-			.sql()
+		.from(User)
+		.select(User.id inList Select().from(User).select(User.id).limit(10))
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -307,10 +307,10 @@ concat是一个可变长参数的函数，接收的参数为各种字段、常�
 concatWs的第一个参数为分隔符的字符串，其他同concat。
 ```kotlin
 val select = Select()
-			.from(User)
-			.select(concat(User.id, const(","), User.name))
-			.select(concatWs(",", User.id, User.name))
-			.sql()
+		.from(User)
+		.select(concat(User.id, const(","), User.name))
+		.select(concatWs(",", User.id, User.name))
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -329,9 +329,9 @@ FROM user
 例子：有些时候我们需要检测sum返回的结果是否是空值，可以使用ifNull函数：
 ```kotlin
 val select = Select()
-			.from(User)
-			.select(ifNull(sum(User.age), 0))
-			.sql()
+		.from(User)
+		.select(ifNull(sum(User.age), 0))
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -368,9 +368,9 @@ FROM user
 使用json（数据库的->操作符）和jsonText(数据库的->>操作符)函数来获取Json数据（支持使用Int下标或者String对象名获取）：
 ```kotlin
 val select = Select()
-			.from(User)
-			.select(User.jsonInfo.json(0).json("obj").jsonText("id"))
-			.sql()
+		.from(User)
+		.select(User.jsonInfo.json(0).json("obj").jsonText("id"))
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -380,9 +380,9 @@ FROM user
 pgsql中使用：
 ```kotlin
 val select = Select(DB.PGSQL)
-			.from(User)
-			.select(User.jsonInfo.json(0).json("obj").jsonText("id"))
-			.sql()
+		.from(User)
+		.select(User.jsonInfo.json(0).json("obj").jsonText("id"))
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -402,9 +402,9 @@ FROM user
 例子：
 ```kotlin
 val select = Select()
-			.from(User)
-			.select(stringAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.gender), true))
-			.sql()
+		.from(User)
+		.select(stringAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.gender), true))
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -414,9 +414,9 @@ FROM user
 pgsql中使用：
 ```kotlin
 val select = Select(DB.PGSQL)
-			.from(User)
-			.select(stringAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.gender), true))
-			.sql()
+		.from(User)
+		.select(stringAgg(User.name, ",", orderByAsc(User.id).orderByDesc(User.gender), true))
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -435,9 +435,9 @@ FROM user
 例子：
 ```kotlin
 val select = Select()
-			.from(User)
-			.select(jsonLength(User.jsonInfo.json(0).json("objs")))
-			.sql()
+		.from(User)
+		.select(jsonLength(User.jsonInfo.json(0).json("objs")))
+		.sql()
 ```
 生成的sql语句：
 ```sql
@@ -447,9 +447,9 @@ FROM user
 pgsql中使用：
 ```kotlin
 val select = Select(DB.PGSQL)
-			.from(User)
-			.select(jsonLength(User.jsonInfo.json(0).json("objs")))
-			.sql()
+		.from(User)
+		.select(jsonLength(User.jsonInfo.json(0).json("objs")))
+		.sql()
 ```
 生成的sql语句：
 ```sql
