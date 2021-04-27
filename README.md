@@ -10,7 +10,7 @@
 注：**以下出现的查询仅为了演示构造器功能，不具有任何实际意义。**
 
 在实体类中添加Kotlin伴生对象，并继承TableSchema类，例如：
-
+```kotlin
     data class User(val id: Long? = 1, val name: String? = null, val gender: Int? = 1) {
         companion object : TableSchema("user") {
             val id = column("id")
@@ -18,6 +18,7 @@
             val gender = column("gender")
         }
     }
+```
 
 使用链式调用：
 
