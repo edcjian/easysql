@@ -11,24 +11,24 @@
 
 在实体类中添加Kotlin伴生对象，并继承TableSchema类，例如：
 ```kotlin
-    data class User(val id: Long? = 1, val name: String? = null, val gender: Int? = 1) {
-        companion object : TableSchema("user") {
-            val id = column("id")
-            val name = column("user_name")
-            val gender = column("gender")
-        }
-    }
+data class User(val id: Long? = 1, val name: String? = null, val gender: Int? = 1) {
+	companion object : TableSchema("user") {
+		val id = column("id")
+		val name = column("user_name")
+		val gender = column("gender")
+	}
+}
 ```
 
 使用链式调用：
 ```kotlin
-    val select = Select().from(User).sql()
+val select = Select().from(User).sql()
 ```
 
 生成的sql语句：
 ```sql
-    SELECT *
-    FROM user
+SELECT *
+FROM user
 ```
 注：from函数第一个参数接收一个TableSchema的子类或者一个字符串，第二个参数为别名，可不传。
 
