@@ -46,8 +46,6 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
         is QueryInSubQuery -> visitQueryInSubQuery(query, dbType)
 
         is QueryBetween<*> -> visitQueryBetween(query, dbType)
-
-        else -> throw TypeCastException("未找到对应的查询类型")
     }
 }
 

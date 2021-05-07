@@ -7,7 +7,7 @@ import com.alibaba.druid.sql.ast.expr.SQLAggregateOption
 import dsl.const
 import select.SelectQuery
 
-abstract class Query(open var alias: String?) {
+sealed class Query(open var alias: String?) {
     constructor() : this(null)
 
     operator fun plus(query: Query): QueryBinary {
