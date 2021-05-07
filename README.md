@@ -80,7 +80,7 @@ SELECT user.user_name
 FROM user
 WHERE user.gender = 1
 ORDER BY user.user_name ASC
-LIMIT 10 OFFSET 100
+LIMIT 10, 10
 ```
 是不是很cool？这就是Kotlin中缀函数的魔力。<br>
 但是遗憾的是，因为Kotlin暂时还不支持数组、集合、元组的字面量，所以中缀调用select、orderBy、groupBy等函数时，如果有多个字段需要用listOf函数包裹（单个字段可以省略listOf），我们暂时无法做到更简洁。<br><br>
