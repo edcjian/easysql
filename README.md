@@ -149,7 +149,7 @@ AND user.gender = 2
 val select = Select()
 		.from(User)
 		.where(User.gender inList listOf(1, 2))
-		.where(User.id between (1 to 10))
+		.where(User.id between 1 and 10)
 		.where(User.name.isNotNull())
 		.where(User.name like "%xxx%")
 		.sql()
@@ -163,7 +163,7 @@ WHERE user.gender IN (1, 2)
 	AND user.user_name IS NOT NULL
 	AND user.user_name LIKE '%xxx%'
 ```
-注：between函数中缀调用时，接受一个Pair二元组，两个值使用Kotlin的中缀函数to隔开，Java调用时可以使用between(query, start, end)的方式。
+注：between中的and和逻辑运算符and是不一样的扩展函数，Java调用时可以使用between(query, start, end)的方式。
 
 #### 有条件的WHERE子句：
 有时候我们需要动态拼接条件，比如检验某个传入的参数不为空时才拼接，例如：
