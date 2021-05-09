@@ -122,7 +122,7 @@ GROUP BY user.user_name
 val select = Select()
 		.from(User)
 		.select((User.id + User.gender) / 2 alias "col")
-		.where((User.id eq 1) and (User.gender eq 2))
+		.where((User.id eq 1) or (User.gender eq 2))
 		.sql()
 ```
 生成的sql语句：
@@ -130,7 +130,7 @@ val select = Select()
 SELECT (user.id + user.gender) / 2 AS col
 FROM user
 WHERE user.id = 1
-AND user.gender = 2
+OR user.gender = 2
 ```
 注：<br>
 1.计算用的二元操作符（+、-、*、/、%）使用Kotlin的运算符重载，因为Java中不支持此功能，所以Java调用的时候需要使用.plus()等方式。<br>
