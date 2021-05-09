@@ -42,7 +42,7 @@ object TestSql {
 //        val select = Select()
 //                .from(User)
 //                .where(User.gender inList listOf(1, 2))
-//                .where(User.id notBetween (1 to 10))
+//                .where((User.id notBetween 1 and 10) and (User.name eq ""))
 //                .where(User.name.isNotNull())
 //                .where(User.name like "%xxx%")
 //                .sql()

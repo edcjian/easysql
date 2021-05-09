@@ -136,12 +136,24 @@ fun <T> Query.between(start: T, end: T): Query {
     return QueryBetween(this, start, end)
 }
 
+infix fun <T> Query.between(start: T): QueryBetween<T> {
+    return QueryBetween(this, start, start)
+}
+
 infix fun <T> Query.notBetween(value: Pair<T, T>): Query {
     return QueryBetween(this, value.first, value.second, true)
 }
 
 fun <T> Query.notBetween(start: T, end: T): Query {
     return QueryBetween(this, start, end, true)
+}
+
+infix fun <T> Query.notBetween(start: T): QueryBetween<T> {
+    return QueryBetween(this, start, start, true)
+}
+
+infix fun <T> QueryBetween<T>.and(end: T): QueryBetween<T> {
+    return QueryBetween(this.query, this.start, end, this.isNot)
 }
 
 fun getBinaryOperator(operator: String): SQLBinaryOperator {
