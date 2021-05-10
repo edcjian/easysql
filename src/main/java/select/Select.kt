@@ -113,6 +113,9 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     fun select(vararg columns: String): Select {
+        if (this.sqlSelect.selectList.size == 1 && this.sqlSelect.selectList[0].expr is SQLAllColumnExpr) {
+            this.sqlSelect.selectList.clear()
+        }
         columns.forEach {
             val trim = it.trim()
             if (trim.contains("*")) {
