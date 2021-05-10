@@ -80,7 +80,7 @@ SELECT user.user_name
 FROM user
 WHERE user.gender = 1
 ORDER BY user.user_name ASC
-LIMIT 10 OFFSET 100
+LIMIT 100, 10
 ```
 是不是很cool？这就是Kotlin中缀函数的魔力。<br>
 但是遗憾的是，因为Kotlin暂时还不支持数组、集合、元组的字面量，所以中缀调用select、orderBy、groupBy等函数时，如果有多个字段需要用listOf函数包裹（单个字段可以省略listOf），我们暂时无法做到更简洁。<br><br>
@@ -122,7 +122,7 @@ GROUP BY user.user_name
 val select = Select()
 		.from(User)
 		.select((User.id + User.gender) / 2 alias "col")
-		.where((User.id eq 1) and (User.gender eq 2))
+		.where((User.id eq 1) or (User.gender eq 2))
 		.sql()
 ```
 生成的sql语句：
@@ -130,7 +130,7 @@ val select = Select()
 SELECT (user.id + user.gender) / 2 AS col
 FROM user
 WHERE user.id = 1
-AND user.gender = 2
+OR user.gender = 2
 ```
 注：<br>
 1.计算用的二元操作符（+、-、*、/、%）使用Kotlin的运算符重载，因为Java中不支持此功能，所以Java调用的时候需要使用.plus()等方式。<br>
@@ -149,7 +149,7 @@ AND user.gender = 2
 val select = Select()
 		.from(User)
 		.where(User.gender inList listOf(1, 2))
-		.where(User.id between (1 to 10))
+		.where(User.id between 1 and 10)
 		.where(User.name.isNotNull())
 		.where(User.name like "%xxx%")
 		.sql()
@@ -163,7 +163,7 @@ WHERE user.gender IN (1, 2)
 	AND user.user_name IS NOT NULL
 	AND user.user_name LIKE '%xxx%'
 ```
-注：between函数中缀调用时，接受一个Pair二元组，两个值使用Kotlin的中缀函数to隔开，Java调用时可以使用between(query, start, end)的方式。
+注：between中的and和逻辑运算符and是不一样的扩展函数，Java调用时可以使用between(query, start, end)的方式。
 
 #### 有条件的WHERE子句：
 有时候我们需要动态拼接条件，比如检验某个传入的参数不为空时才拼接，例如：
