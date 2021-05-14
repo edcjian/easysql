@@ -1,11 +1,10 @@
 package expr
 
 import com.alibaba.druid.sql.ast.SQLExpr
-import com.alibaba.druid.sql.ast.SQLOrderBy
 import com.alibaba.druid.sql.ast.SQLOrderingSpecification
 import com.alibaba.druid.sql.ast.expr.SQLAggregateOption
 import dsl.const
-import select.SelectQuery
+import query.select.SelectQuery
 
 sealed class Query(open var alias: String?) {
     constructor() : this(null)
@@ -98,10 +97,10 @@ data class QueryInList<T>(
 ) : Query()
 
 data class QueryInSubQuery(
-        val query: Query,
-        val subQuery: SelectQuery,
-        val isNot: Boolean = false,
-        override var alias: String? = null
+    val query: Query,
+    val subQuery: SelectQuery,
+    val isNot: Boolean = false,
+    override var alias: String? = null
 ) : Query()
 
 data class QueryBetween<T>(val query: Query, val start: T, val end: T, val isNot: Boolean = false, override var alias: String? = null) : Query()

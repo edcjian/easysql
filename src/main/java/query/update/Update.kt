@@ -1,4 +1,4 @@
-package update
+package query.update
 
 import com.alibaba.druid.sql.SQLUtils
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource

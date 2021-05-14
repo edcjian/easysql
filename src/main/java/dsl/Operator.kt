@@ -2,7 +2,7 @@ package dsl
 
 import com.alibaba.druid.sql.ast.expr.SQLBinaryOperator
 import expr.*
-import select.SelectQuery
+import query.select.SelectQuery
 
 infix fun Query.eq(query: Query): QueryBinary {
     return QueryBinary(this, "=", query)

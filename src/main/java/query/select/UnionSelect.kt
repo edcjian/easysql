@@ -1,4 +1,4 @@
-package select
+package query.select
 
 import com.alibaba.druid.sql.SQLUtils
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery

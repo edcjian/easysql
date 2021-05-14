@@ -1,7 +1,5 @@
-import com.alibaba.druid.sql.visitor.functions.IfNull
-import dsl.*
 import expr.DB
-import select.Select
+import query.insert.Insert
 
 object TestSql {
     @JvmStatic
@@ -143,5 +141,11 @@ object TestSql {
 //        val select = Select() select listOf(User.id alias "c1", User.name alias "c2") from
 //                User where (User.id eq 1) orderByAsc User.name limit 10 offset 100
 //        println(select.sql())
+
+
+//        val userList = listOf(User(1, "name", 1, 10, "", ""), User(2, "name", 1, 10, "", ""))
+//        val insert = Insert(DB.PGSQL) into User values userList
+//
+//        println(insert.sql())
     }
 }

@@ -1,4 +1,4 @@
-package select
+package query.select
 
 import com.alibaba.druid.sql.SQLUtils
 import com.alibaba.druid.sql.ast.SQLLimit
@@ -283,10 +283,10 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     private fun join(
-            table: SelectQuery,
-            alias: String? = null,
-            on: Query?,
-            joinType: SQLJoinTableSource.JoinType
+        table: SelectQuery,
+        alias: String? = null,
+        on: Query?,
+        joinType: SQLJoinTableSource.JoinType
     ): Select {
         val join = SQLJoinTableSource()
         join.left = joinLeft
