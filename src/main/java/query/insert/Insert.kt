@@ -2,8 +2,6 @@ package query.insert
 
 import com.alibaba.druid.sql.SQLUtils
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr
-import com.alibaba.druid.sql.ast.expr.SQLListExpr
-import com.alibaba.druid.sql.ast.expr.SQLValuesExpr
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource
 import com.alibaba.druid.sql.ast.statement.SQLInsertStatement
 import com.alibaba.druid.sql.visitor.VisitorFeature

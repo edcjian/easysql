@@ -1,4 +1,6 @@
+import dsl.eq
 import expr.DB
+import query.delete.Delete
 import query.insert.Insert
 
 object TestSql {
@@ -147,5 +149,8 @@ object TestSql {
 //        val insert = Insert(DB.PGSQL) into User values userList
 //
 //        println(insert.sql())
+
+//        val delete = Delete() from User where (User.id eq 1)
+//        println(delete.sql())
     }
 }
