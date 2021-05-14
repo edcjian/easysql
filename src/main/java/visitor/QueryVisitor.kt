@@ -19,7 +19,7 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
     return when (query) {
         null -> QueryExpr(SQLNullExpr())
 
-        is QueryColumn -> visitQueryColumn(query, dbType)
+        is QueryColumn -> visitQueryColumn(query)
 
         is QueryExprFunction -> visitQueryExprFunction(query, dbType)
 
@@ -33,9 +33,9 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
 
         is QueryCase<*> -> visitQueryCase(query, dbType)
 
-        is QuerySub -> visitQuerySub(query, dbType)
+        is QuerySub -> visitQuerySub(query)
 
-        is QueryTableColumn -> visitQueryTableColumn(query, dbType)
+        is QueryTableColumn -> visitQueryTableColumn(query)
 
         is QueryJson -> visitQueryJson(query, dbType)
 
@@ -49,7 +49,7 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
     }
 }
 
-fun visitQueryColumn(query: QueryColumn, dbType: DB): QueryExpr {
+fun visitQueryColumn(query: QueryColumn): QueryExpr {
     return if (query.column.contains(".")) {
         val expr = SQLPropertyExpr()
         val split = query.column.split(".")
@@ -69,7 +69,7 @@ val specialExprFunction = mapOf("*IFNULL" to ::visitFunctionIfNull,
 
 fun visitQueryExprFunction(query: QueryExprFunction, dbType: DB): QueryExpr {
     if (specialExprFunction.contains(query.name)) {
-        return specialExprFunction[query.name]!!.let { it(query, dbType) }
+        return (specialExprFunction[query.name]!!)(query, dbType)
     }
 
     val expr = SQLMethodInvokeExpr()
@@ -86,7 +86,7 @@ val specialAggFunction = mapOf("*STRING_AGG" to ::visitFunctionStringAgg, "*ARRA
 
 fun visitQueryAggFunction(query: QueryAggFunction, dbType: DB): QueryExpr {
     if (specialAggFunction.contains(query.name)) {
-        return specialAggFunction[query.name]!!.let { it(query, dbType) }
+        return (specialAggFunction[query.name]!!)(query, dbType)
     }
 
     val expr = SQLAggregateExpr(query.name)
@@ -143,7 +143,7 @@ fun visitQueryCase(query: QueryCase<*>, dbType: DB): QueryExpr {
     return QueryExpr(expr, query.alias)
 }
 
-fun visitQuerySub(query: QuerySub, dbType: DB): QueryExpr {
+fun visitQuerySub(query: QuerySub): QueryExpr {
     val expr = SQLQueryExpr()
     val sqlSelect = SQLSelect()
     sqlSelect.query = query.selectQuery.getSelect()
@@ -151,7 +151,7 @@ fun visitQuerySub(query: QuerySub, dbType: DB): QueryExpr {
     return QueryExpr(expr, query.alias)
 }
 
-fun visitQueryTableColumn(query: QueryTableColumn, dbType: DB): QueryExpr {
+fun visitQueryTableColumn(query: QueryTableColumn): QueryExpr {
     val expr = SQLPropertyExpr()
     expr.name = query.column
     expr.owner = SQLIdentifierExpr(query.table)
