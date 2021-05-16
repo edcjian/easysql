@@ -2,6 +2,8 @@ import dsl.eq
 import expr.DB
 import query.delete.Delete
 import query.insert.Insert
+import util.convertClassToObject
+import util.humpToLine
 
 object TestSql {
     @JvmStatic
@@ -152,5 +154,7 @@ object TestSql {
 
 //        val delete = Delete() from User where (User.id eq 1)
 //        println(delete.sql())
+
+//        convertClassToObject<User>()
     }
 }
