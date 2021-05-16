@@ -2,12 +2,12 @@ import dsl.column
 import expr.TableSchema
 
 data class User(
-    val id: Long? = 1,
-    val name: String? = null,
-    val gender: Int? = 1,
-    val age: Int? = 1,
-    val jsonInfo: String? = null,
-    val ids: String? = null
+    var id: Long? = 1,
+    var name: String? = null,
+    var gender: Int? = 1,
+    var age: Int? = 1,
+    var jsonInfo: String? = null,
+    var ids: String? = null
 ) {
     companion object : TableSchema("user") {
         val id = column("id")
@@ -19,7 +19,7 @@ data class User(
     }
 }
 
-data class User1(val id: Long? = 1, val name: String? = null) {
+data class User1(var id: Long? = null, var name: String? = null) {
     companion object : TableSchema("user1") {
         val id = column("id")
         val name = column("user_name")

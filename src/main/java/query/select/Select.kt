@@ -12,10 +12,23 @@ import com.alibaba.druid.sql.ast.statement.*
 import com.alibaba.druid.sql.visitor.VisitorFeature
 import dsl.*
 import expr.*
+import jdbc.DataSource
 import visitor.*
+import java.lang.Exception
+import java.sql.ResultSet
+import java.sql.SQLException
+import java.sql.Statement
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty
+import kotlin.reflect.full.companionObject
+import kotlin.reflect.full.companionObjectInstance
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.declaredMembers
+import kotlin.reflect.jvm.internal.impl.utils.SmartSet
+import kotlin.reflect.jvm.javaField
 
 
-class Select(db: DB = DB.MYSQL) : SelectQuery {
+class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : SelectQuery {
     private var sqlSelect = SQLSelectQueryBlock()
 
     private lateinit var joinLeft: SQLTableSourceImpl
@@ -262,10 +275,10 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
     }
 
     private fun join(
-            table: String,
-            alias: String? = null,
-            on: Query?,
-            joinType: SQLJoinTableSource.JoinType
+        table: String,
+        alias: String? = null,
+        on: Query?,
+        joinType: SQLJoinTableSource.JoinType
     ): Select {
         val join = SQLJoinTableSource()
         join.left = joinLeft
@@ -435,7 +448,12 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
         if (sqlSelect.selectList.isEmpty()) {
             select()
         }
-        return SQLUtils.toSQLString(sqlSelect, sqlSelect.dbType, SQLUtils.FormatOption(), VisitorFeature.OutputNameQuote)
+        return SQLUtils.toSQLString(
+            sqlSelect,
+            sqlSelect.dbType,
+            SQLUtils.FormatOption(),
+            VisitorFeature.OutputNameQuote
+        )
     }
 
     override fun getSelect(): SQLSelectQuery {
@@ -444,5 +462,36 @@ class Select(db: DB = DB.MYSQL) : SelectQuery {
 
     override fun getDbType(): DB {
         return this.dbType
+    }
+
+    override fun query(): List<Map<String, Any>> {
+        val conn = this.dataSource!!.getDataSource().connection
+        return jdbc.query(conn, this.sql())
+    }
+
+    inline fun <reified T> queryForObjectList(): List<T> {
+        val conn = this.dataSource!!.getDataSource().connection
+        val list = jdbc.query(conn, this.sql())
+        val companion = T::class.companionObjectInstance ?: throw Exception("实体类需要添加伴生对象")
+        val companionClass = companion::class
+        val columns = companionClass.declaredMemberProperties
+            .map { it.getter.call(companion) to it.name }
+            .filter { it.first is QueryTableColumn }
+            .map { (it.first as QueryTableColumn).column to it.second }
+            .toMap()
+
+        return list.map {
+            val rowClass = T::class
+            val row = rowClass.java.newInstance()
+
+            columns.forEach { column ->
+                val fieldName = column.value
+                val field = (rowClass.declaredMembers.find { it.name == fieldName } as KProperty).javaField
+                field?.isAccessible = true
+                field?.set(row, it[column.key])
+            }
+
+            row
+        }
     }
 }

@@ -1,9 +1,8 @@
-import dsl.eq
+import dsl.column
+import dsl.findInSet
 import expr.DB
-import query.delete.Delete
-import query.insert.Insert
-import util.convertClassToObject
-import util.humpToLine
+import jdbc.DataSource
+import query.select.Select
 
 object TestSql {
     @JvmStatic
@@ -156,5 +155,21 @@ object TestSql {
 //        println(delete.sql())
 
 //        convertClassToObject<User>()
+
+//        val dataSource = DataSource(
+//            "jdbc:mysql://xxxx",
+//            "root",
+//            "123456",
+//            "com.mysql.jdbc.Driver",
+//            DB.MYSQL
+//        )
+//
+//        val result = dataSource
+//            .select()
+//            .from(User)
+//            .limit(10)
+//            .queryForObjectList<User1>()
+//
+//        println(result)
     }
 }
