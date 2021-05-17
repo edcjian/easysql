@@ -8,17 +8,16 @@ import com.alibaba.druid.sql.visitor.VisitorFeature
 import expr.DB
 import expr.Query
 import expr.TableSchema
+import jdbc.DataSource
 import visitor.getDbType
 import visitor.getExpr
 import visitor.getQueryExpr
 
-class Update(db: DB = DB.MYSQL) {
+class Update(var db: DB = DB.MYSQL, var dataSource: DataSource? = null) {
     private var sqlUpdate = SQLUpdateStatement()
 
-    private var dbType: DB = db
-
     init {
-        sqlUpdate.dbType = getDbType(dbType)
+        sqlUpdate.dbType = getDbType(db)
     }
 
     fun update(table: String): Update {
@@ -33,7 +32,7 @@ class Update(db: DB = DB.MYSQL) {
     infix fun <T : Any> set(item: Pair<Query, T>): Update {
         val (column, value) = item
         val updateItem = SQLUpdateSetItem()
-        updateItem.column = getQueryExpr(column, this.dbType).expr
+        updateItem.column = getQueryExpr(column, this.db).expr
         updateItem.value = getExpr(value)
         this.sqlUpdate.addItem(updateItem)
 
@@ -44,7 +43,7 @@ class Update(db: DB = DB.MYSQL) {
         items.forEach {
             val (column, value) = it
             val updateItem = SQLUpdateSetItem()
-            updateItem.column = getQueryExpr(column, this.dbType).expr
+            updateItem.column = getQueryExpr(column, this.db).expr
             updateItem.value = getExpr(value)
             this.sqlUpdate.addItem(updateItem)
         }
@@ -56,7 +55,7 @@ class Update(db: DB = DB.MYSQL) {
         items.forEach {
             val (column, value) = it
             val updateItem = SQLUpdateSetItem()
-            updateItem.column = getQueryExpr(column, this.dbType).expr
+            updateItem.column = getQueryExpr(column, this.db).expr
             updateItem.value = getExpr(value)
             this.sqlUpdate.addItem(updateItem)
         }
@@ -65,7 +64,7 @@ class Update(db: DB = DB.MYSQL) {
     }
 
     infix fun where(condition: Query): Update {
-        this.sqlUpdate.addCondition(getQueryExpr(condition, this.dbType).expr)
+        this.sqlUpdate.addCondition(getQueryExpr(condition, this.db).expr)
         return this
     }
 
@@ -92,5 +91,10 @@ class Update(db: DB = DB.MYSQL) {
             SQLUtils.FormatOption(),
             VisitorFeature.OutputNameQuote
         )
+    }
+
+    fun exec(): Int {
+        val conn = this.dataSource!!.getDataSource().connection
+        return jdbc.queryCount(conn, this.sql())
     }
 }

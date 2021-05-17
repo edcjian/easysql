@@ -7,16 +7,15 @@ import com.alibaba.druid.sql.visitor.VisitorFeature
 import expr.DB
 import expr.Query
 import expr.TableSchema
+import jdbc.DataSource
 import visitor.getDbType
 import visitor.getQueryExpr
 
-class Delete(db: DB = DB.MYSQL) {
+class Delete(var db: DB = DB.MYSQL, var dataSource: DataSource? = null) {
     private var sqlDelete = SQLDeleteStatement()
 
-    private var dbType: DB = db
-
     init {
-        sqlDelete.dbType = getDbType(dbType)
+        sqlDelete.dbType = getDbType(db)
     }
 
     infix fun from(table: String): Delete {
@@ -29,7 +28,7 @@ class Delete(db: DB = DB.MYSQL) {
     }
 
     infix fun where(condition: Query): Delete {
-        this.sqlDelete.addCondition(getQueryExpr(condition, this.dbType).expr)
+        this.sqlDelete.addCondition(getQueryExpr(condition, this.db).expr)
         return this
     }
 
@@ -56,5 +55,10 @@ class Delete(db: DB = DB.MYSQL) {
             SQLUtils.FormatOption(),
             VisitorFeature.OutputNameQuote
         )
+    }
+
+    fun exec(): Int {
+        val conn = this.dataSource!!.getDataSource().connection
+        return jdbc.queryCount(conn, this.sql())
     }
 }

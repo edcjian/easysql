@@ -39,4 +39,13 @@ abstract class SelectQueryImpl : SelectQuery {
             row
         }
     }
+
+    fun count(): Int {
+        val conn = this.dataSource!!.getDataSource().connection
+        return jdbc.queryCount(conn, this.sql())
+    }
+
+    fun exist(): Boolean {
+        return count() > 0
+    }
 }
