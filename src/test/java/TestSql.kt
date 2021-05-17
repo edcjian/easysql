@@ -168,7 +168,7 @@ object TestSql {
 //            .select()
 //            .from(User)
 //            .limit(10)
-//            .queryForObjectList<User1>()
+//            .queryForObjectList<User>()
 //
 //        println(result)
     }

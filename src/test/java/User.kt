@@ -1,4 +1,5 @@
 import dsl.column
+import dsl.incr
 import expr.TableSchema
 
 data class User(
@@ -10,7 +11,7 @@ data class User(
     var ids: String? = null
 ) {
     companion object : TableSchema("user") {
-        val id = column("id").incr
+        val id = column("id").incr()
         val name = column("user_name")
         val gender = column("gender")
         val age = column("age")

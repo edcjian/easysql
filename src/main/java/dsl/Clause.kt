@@ -29,7 +29,7 @@ fun TableSchema.column(name: String): QueryTableColumn {
     return QueryTableColumn(this.tableName, name)
 }
 
-fun QueryTableColumn.inct(): QueryTableColumn {
+fun QueryTableColumn.incr(): QueryTableColumn {
     this.incr = true
     return this
 }
