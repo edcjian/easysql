@@ -29,6 +29,11 @@ fun TableSchema.column(name: String): QueryTableColumn {
     return QueryTableColumn(this.tableName, name)
 }
 
+fun QueryTableColumn.inct(): QueryTableColumn {
+    this.incr = true
+    return this
+}
+
 fun <T> const(value: T): QueryConst<T> {
     return QueryConst(value)
 }

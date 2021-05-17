@@ -2,6 +2,7 @@ import dsl.column
 import dsl.findInSet
 import expr.DB
 import jdbc.DataSource
+import query.insert.Insert
 import query.select.Select
 
 object TestSql {
@@ -148,7 +149,6 @@ object TestSql {
 
 //        val userList = listOf(User(1, "name", 1, 10, "", ""), User(2, "name", 1, 10, "", ""))
 //        val insert = Insert(DB.PGSQL) into User values userList
-//
 //        println(insert.sql())
 
 //        val delete = Delete() from User where (User.id eq 1)

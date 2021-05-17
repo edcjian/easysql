@@ -30,9 +30,12 @@ class Insert(db: DB = DB.MYSQL) {
         val declaredMemberProperties = clazz.declaredMemberProperties
         columns = declaredMemberProperties.map { it.name }
         val properties = declaredMemberProperties.map { it.getter.call(table) }
-        properties.filterIsInstance<QueryTableColumn>().map { SQLIdentifierExpr(it.column) }.forEach {
-            sqlInsert.addColumn(it)
-        }
+        properties.filterIsInstance<QueryTableColumn>()
+            .filter { it.incr == false }
+            .map { SQLIdentifierExpr(it.column) }
+            .forEach {
+                sqlInsert.addColumn(it)
+            }
 
         return this
     }

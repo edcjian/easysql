@@ -10,7 +10,7 @@ data class User(
     var ids: String? = null
 ) {
     companion object : TableSchema("user") {
-        val id = column("id")
+        val id = column("id").incr
         val name = column("user_name")
         val gender = column("gender")
         val age = column("age")
