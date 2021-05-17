@@ -20,7 +20,7 @@ class Update(var db: DB = DB.MYSQL, var dataSource: DataSource? = null) {
         sqlUpdate.dbType = getDbType(db)
     }
 
-    fun update(table: String): Update {
+    infix fun update(table: String): Update {
         this.sqlUpdate.tableSource = SQLExprTableSource(table)
         return this
     }

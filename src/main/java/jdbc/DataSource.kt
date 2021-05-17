@@ -3,11 +3,14 @@ package jdbc
 import com.alibaba.druid.pool.DruidDataSource
 import expr.DB
 import expr.Query
+import expr.TableSchema
+import query.delete.Delete
+import query.insert.Insert
 import query.select.Select
+import query.update.Update
 
-class DataSource(url: String, userName: String, password: String, driver: String, database: DB) {
+class DataSource(url: String, userName: String, password: String, driver: String, var db: DB) {
     private var dataSource: DruidDataSource = DruidDataSource()
-    private var db: DB = database
 
     init {
         dataSource.url = url
@@ -38,5 +41,35 @@ class DataSource(url: String, userName: String, password: String, driver: String
 
     fun select(): Select {
         return Select(db, this)
+    }
+
+    infix fun update(table: String): Update {
+        val update = Update(db, this)
+        update.update(table)
+        return update
+    }
+
+    infix fun update(table: TableSchema): Update {
+        val update = Update(db, this)
+        update.update(table)
+        return update
+    }
+
+    infix fun insert(table: TableSchema): Insert {
+        val insert = Insert(db, this)
+        insert.into(table)
+        return insert
+    }
+
+    infix fun delete(table: String): Delete {
+        val delete = Delete(db, this)
+        delete.from(table)
+        return delete
+    }
+
+    infix fun delete(table: TableSchema): Delete {
+        val delete = Delete(db, this)
+        delete.from(table)
+        return delete
     }
 }

@@ -1,7 +1,4 @@
-import dsl.column
-import dsl.findInSet
-import dsl.union
-import dsl.unionAll
+import dsl.*
 import expr.DB
 import jdbc.DataSource
 import query.insert.Insert
@@ -165,6 +162,9 @@ object TestSql {
 //            "com.mysql.jdbc.Driver",
 //            DB.MYSQL
 //        )
+//
+//        val delete = dataSource delete User where (User.id eq 1)
+//        delete.exec()
 //
 //        val result = dataSource
 //            .select()
