@@ -28,7 +28,7 @@ import kotlin.reflect.jvm.internal.impl.utils.SmartSet
 import kotlin.reflect.jvm.javaField
 
 
-class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : SelectQuery {
+class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : SelectQueryImpl() {
     private var sqlSelect = SQLSelectQueryBlock()
 
     private lateinit var joinLeft: SQLTableSourceImpl
@@ -464,14 +464,16 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
         return this.dbType
     }
 
-    override fun query(): List<Map<String, Any>> {
-        val conn = this.dataSource!!.getDataSource().connection
-        return jdbc.query(conn, this.sql())
-    }
-
-    inline fun <reified T> queryForObjectList(): List<T> {
+    inline fun <reified T> find(): T? {
+        this.limit(1)
         val conn = this.dataSource!!.getDataSource().connection
         val list = jdbc.query(conn, this.sql())
+        if (list.isEmpty()) {
+            return null
+        }
+
+        val map = list[0]
+
         val companion = T::class.companionObjectInstance ?: throw Exception("实体类需要添加伴生对象")
         val companionClass = companion::class
         val columns = companionClass.declaredMemberProperties
@@ -480,18 +482,28 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
             .map { (it.first as QueryTableColumn).column to it.second }
             .toMap()
 
-        return list.map {
-            val rowClass = T::class
-            val row = rowClass.java.newInstance()
+        val rowClass = T::class
+        val row = rowClass.java.newInstance()
 
-            columns.forEach { column ->
-                val fieldName = column.value
-                val field = (rowClass.declaredMembers.find { it.name == fieldName } as KProperty).javaField
-                field?.isAccessible = true
-                field?.set(row, it[column.key])
-            }
-
-            row
+        columns.forEach { column ->
+            val fieldName = column.value
+            val field = (rowClass.declaredMembers.find { it.name == fieldName } as KProperty).javaField
+            field?.isAccessible = true
+            field?.set(row, map[column.key])
         }
+
+        return row
+    }
+
+    fun findMap(): Map<String, Any>? {
+        this.limit(1)
+
+        val conn = this.dataSource!!.getDataSource().connection
+        val list = jdbc.query(conn, this.sql())
+        if (list.isEmpty()) {
+            return null
+        }
+
+        return list[0]
     }
 }

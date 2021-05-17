@@ -12,6 +12,4 @@ interface SelectQuery {
     fun getSelect(): SQLSelectQuery
 
     fun getDbType(): DB
-
-    fun query(): List<Map<String, Any>>
 }

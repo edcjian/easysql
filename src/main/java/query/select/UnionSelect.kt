@@ -5,9 +5,9 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectQuery
 import com.alibaba.druid.sql.ast.statement.SQLUnionOperator
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery
 import com.alibaba.druid.sql.visitor.VisitorFeature
-import visitor.getDbType
 import expr.DB
 import jdbc.DataSource
+import visitor.getDbType
 
 class UnionSelect(
     left: SelectQuery,
@@ -16,7 +16,7 @@ class UnionSelect(
     db: DB = DB.MYSQL,
     override var dataSource: DataSource? = null
 ) :
-    SelectQuery {
+    SelectQueryImpl() {
     private var unionSelect = SQLUnionQuery()
 
     private var dbType: DB = db
@@ -37,9 +37,5 @@ class UnionSelect(
 
     override fun getDbType(): DB {
         return this.dbType
-    }
-
-    override fun query(): List<Map<String, Any>> {
-        TODO("Not yet implemented")
     }
 }
