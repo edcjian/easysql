@@ -1,5 +1,7 @@
 import dsl.column
 import dsl.findInSet
+import dsl.union
+import dsl.unionAll
 import expr.DB
 import jdbc.DataSource
 import query.insert.Insert
@@ -76,7 +78,7 @@ object TestSql {
 //            .sql()
 //        println(select)
 
-//        val select = (Select().from(User).select(User.id) union
+//        val select = (Select(DB.PGSQL).from(User).select(User.id) union
 //                Select().from(User).select(User.id) unionAll
 //                Select().from(User).select(User.id)).sql()
 //        println(select)

@@ -28,16 +28,14 @@ import kotlin.reflect.jvm.internal.impl.utils.SmartSet
 import kotlin.reflect.jvm.javaField
 
 
-class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : SelectQueryImpl() {
+class Select(var db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : SelectQueryImpl() {
     private var sqlSelect = SQLSelectQueryBlock()
 
     private lateinit var joinLeft: SQLTableSourceImpl
 
-    private var dbType: DB = db
-
     init {
         sqlSelect.addSelectItem(SQLAllColumnExpr())
-        sqlSelect.dbType = getDbType(dbType)
+        sqlSelect.dbType = getDbType(db)
     }
 
     fun from(table: String, alias: String? = null): Select {
@@ -88,7 +86,7 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
             this.sqlSelect.selectList.clear()
         }
         query.forEach {
-            val queryExpr = getQueryExpr(it, this.dbType)
+            val queryExpr = getQueryExpr(it, this.db)
             sqlSelect.addSelectItem(queryExpr.expr, queryExpr.alias)
         }
         return this
@@ -163,7 +161,7 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
     }
 
     infix fun where(query: Query): Select {
-        sqlSelect.addCondition(getQueryExpr(query, this.dbType).expr)
+        sqlSelect.addCondition(getQueryExpr(query, this.db).expr)
         return this
     }
 
@@ -182,7 +180,7 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
     }
 
     infix fun having(query: Query): Select {
-        sqlSelect.addHaving(getQueryExpr(query, this.dbType).expr)
+        sqlSelect.addHaving(getQueryExpr(query, this.db).expr)
         return this
     }
 
@@ -190,7 +188,7 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
         val order = SQLOrderBy()
         columns.forEach {
             val item = SQLSelectOrderByItem()
-            item.expr = getQueryExpr(it, this.dbType).expr
+            item.expr = getQueryExpr(it, this.db).expr
             item.type = specification
             order.addItem(item)
         }
@@ -254,7 +252,7 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
             group = SQLSelectGroupByClause()
         }
         columns.forEach {
-            val expr = getQueryExpr(it, this.dbType).expr
+            val expr = getQueryExpr(it, this.db).expr
             group.addItem(expr)
         }
         sqlSelect.groupBy = group
@@ -287,7 +285,7 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
         join.right = right
         join.joinType = joinType
         if (on != null) {
-            val condition = getQueryExpr(on, this.dbType).expr
+            val condition = getQueryExpr(on, this.db).expr
             join.condition = condition
         }
         sqlSelect.from = join
@@ -308,7 +306,7 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
         join.right = tableSource
         join.joinType = joinType
         if (on != null) {
-            val condition = getQueryExpr(on, this.dbType).expr
+            val condition = getQueryExpr(on, this.db).expr
             join.condition = condition
         }
         sqlSelect.from = join
@@ -319,7 +317,7 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
     infix fun on(on: Query): Select {
         val from = this.sqlSelect.from
         if (from is SQLJoinTableSource) {
-            from.condition = getQueryExpr(on, this.dbType).expr
+            from.condition = getQueryExpr(on, this.db).expr
         }
         return this
     }
@@ -461,7 +459,7 @@ class Select(db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : S
     }
 
     override fun getDbType(): DB {
-        return this.dbType
+        return this.db
     }
 
     inline fun <reified T> find(): T? {

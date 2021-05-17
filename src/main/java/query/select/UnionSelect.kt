@@ -13,16 +13,15 @@ class UnionSelect(
     left: SelectQuery,
     operator: SQLUnionOperator,
     right: SelectQuery,
-    db: DB = DB.MYSQL,
+    var db: DB = DB.MYSQL,
     override var dataSource: DataSource? = null
 ) :
     SelectQueryImpl() {
     private var unionSelect = SQLUnionQuery()
 
-    private var dbType: DB = db
-
     init {
-        unionSelect.dbType = getDbType(dbType)
+        this.dataSource = left.dataSource
+        unionSelect.dbType = getDbType(db)
         unionSelect.left = left.getSelect()
         unionSelect.operator = operator
         unionSelect.right = right.getSelect()
@@ -36,6 +35,6 @@ class UnionSelect(
     }
 
     override fun getDbType(): DB {
-        return this.dbType
+        return this.db
     }
 }
