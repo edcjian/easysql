@@ -462,6 +462,37 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DataSource? = null)
         return this.db
     }
 
+    fun <T : Any> find(clazz: Class<T>): T? {
+        this.limit(1)
+        val conn = this.dataSource!!.getDataSource().connection
+        val list = jdbc.query(conn, this.sql())
+        if (list.isEmpty()) {
+            return null
+        }
+
+        val map = list[0]
+
+        val companion = clazz.kotlin.companionObjectInstance ?: throw Exception("实体类需要添加伴生对象")
+        val companionClass = companion::class
+        val columns = companionClass.declaredMemberProperties
+            .map { it.getter.call(companion) to it.name }
+            .filter { it.first is QueryTableColumn }
+            .map { (it.first as QueryTableColumn).column to it.second }
+            .toMap()
+
+        val rowClass = clazz
+        val row = rowClass.newInstance()
+
+        columns.forEach { column ->
+            val fieldName = column.value
+            val field = (rowClass.kotlin.declaredMembers.find { it.name == fieldName } as KProperty).javaField
+            field?.isAccessible = true
+            field?.set(row, map[column.key])
+        }
+
+        return row
+    }
+
     inline fun <reified T> find(): T? {
         this.limit(1)
         val conn = this.dataSource!!.getDataSource().connection
