@@ -9,7 +9,7 @@ import kotlin.reflect.full.declaredMembers
 import kotlin.reflect.jvm.javaField
 
 abstract class SelectQueryImpl : SelectQuery {
-    fun queryForMap(): List<Map<String, Any>> {
+    fun queryMap(): List<Map<String, Any>> {
         val conn = this.dataSource!!.getDataSource().connection
         return jdbc.query(conn, this.sql())
     }
