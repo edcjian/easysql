@@ -8,15 +8,13 @@ import query.delete.Delete
 import query.insert.Insert
 import query.select.Select
 import query.update.Update
+import javax.sql.CommonDataSource
 
-class DataSource(url: String, userName: String, password: String, driver: String, var db: DB) {
-    private var dataSource: DruidDataSource = DruidDataSource()
+class DataSource(source: CommonDataSource, var db: DB) {
+    private var dataSource: CommonDataSource
 
     init {
-        dataSource.url = url
-        dataSource.username = userName
-        dataSource.password = password
-        dataSource.driverClassName = driver
+        dataSource = source
     }
 
     fun getDataSource() = dataSource
