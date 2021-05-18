@@ -16,7 +16,7 @@ import kotlin.reflect.full.declaredMemberProperties
 class Insert(var db: DB = DB.MYSQL, var dataSource: DataSource? = null) {
     private var sqlInsert = SQLInsertStatement()
 
-    private lateinit var columns: List<String>
+    private var columns = mutableListOf<String>()
 
     init {
         sqlInsert.dbType = getDbType(db)
@@ -27,14 +27,16 @@ class Insert(var db: DB = DB.MYSQL, var dataSource: DataSource? = null) {
 
         val clazz = table::class
         val declaredMemberProperties = clazz.declaredMemberProperties
-        columns = declaredMemberProperties.map { it.name }
-        val properties = declaredMemberProperties.map { it.getter.call(table) }
-        properties.filterIsInstance<QueryTableColumn>()
-            .filter { it.incr == false }
-            .map { SQLIdentifierExpr(it.column) }
-            .forEach {
-                sqlInsert.addColumn(it)
-            }
+
+        val properties = declaredMemberProperties.map { it.name to it.getter.call(table) }
+            .filter { it.second is QueryTableColumn }
+            .map { it.first to it.second as QueryTableColumn }
+            .filter { it.second.incr == false }
+
+        properties.forEach {
+            columns.add(it.first)
+            sqlInsert.addColumn(SQLIdentifierExpr(it.second.column))
+        }
 
         return this
     }
@@ -43,6 +45,7 @@ class Insert(var db: DB = DB.MYSQL, var dataSource: DataSource? = null) {
         val clazz = obj::class
         val properties = clazz.declaredMemberProperties.map { it.name to it.getter.call(obj) }.toMap()
         val values = columns.map { properties[it] }
+        println(columns)
 
         val valuesClause = SQLInsertStatement.ValuesClause()
         values.forEach { valuesClause.addValue(getExpr(it)) }
@@ -70,6 +73,6 @@ class Insert(var db: DB = DB.MYSQL, var dataSource: DataSource? = null) {
 
     fun exec(): Int {
         val conn = this.dataSource!!.getDataSource().connection
-        return jdbc.queryCount(conn, this.sql())
+        return jdbc.exec(conn, this.sql())
     }
 }

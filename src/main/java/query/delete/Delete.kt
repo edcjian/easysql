@@ -59,6 +59,6 @@ class Delete(var db: DB = DB.MYSQL, var dataSource: DataSource? = null) {
 
     fun exec(): Int {
         val conn = this.dataSource!!.getDataSource().connection
-        return jdbc.queryCount(conn, this.sql())
+        return jdbc.exec(conn, this.sql())
     }
 }
