@@ -2,10 +2,10 @@ package query.select
 
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery
 import expr.DB
-import jdbc.DataSource
+import database.DBConnection
 
 interface SelectQuery {
-    var dataSource: DataSource?
+    var dataSource: DBConnection?
 
     fun sql(): String
 

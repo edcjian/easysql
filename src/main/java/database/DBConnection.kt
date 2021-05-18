@@ -1,6 +1,5 @@
-package jdbc
+package database
 
-import com.alibaba.druid.pool.DruidDataSource
 import expr.DB
 import expr.Query
 import expr.TableSchema
@@ -8,10 +7,9 @@ import query.delete.Delete
 import query.insert.Insert
 import query.select.Select
 import query.update.Update
-import javax.sql.CommonDataSource
 
-class DataSource(source: CommonDataSource, var db: DB) {
-    private var dataSource: CommonDataSource
+class DBConnection(source: javax.sql.DataSource, var db: DB) {
+    private var dataSource: javax.sql.DataSource
 
     init {
         dataSource = source

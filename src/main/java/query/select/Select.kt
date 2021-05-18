@@ -12,23 +12,17 @@ import com.alibaba.druid.sql.ast.statement.*
 import com.alibaba.druid.sql.visitor.VisitorFeature
 import dsl.*
 import expr.*
-import jdbc.DataSource
+import database.DBConnection
 import visitor.*
 import java.lang.Exception
-import java.sql.ResultSet
-import java.sql.SQLException
-import java.sql.Statement
-import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty
-import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.declaredMembers
-import kotlin.reflect.jvm.internal.impl.utils.SmartSet
 import kotlin.reflect.jvm.javaField
 
 
-class Select(var db: DB = DB.MYSQL, override var dataSource: DataSource? = null) : SelectQueryImpl() {
+class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = null) : SelectQueryImpl() {
     private var sqlSelect = SQLSelectQueryBlock()
 
     private lateinit var joinLeft: SQLTableSourceImpl
@@ -465,7 +459,7 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DataSource? = null)
     fun <T : Any> find(clazz: Class<T>): T? {
         this.limit(1)
         val conn = this.dataSource!!.getDataSource().connection
-        val list = jdbc.query(conn, this.sql())
+        val list = database.query(conn, this.sql())
         if (list.isEmpty()) {
             return null
         }
@@ -496,7 +490,7 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DataSource? = null)
     inline fun <reified T> find(): T? {
         this.limit(1)
         val conn = this.dataSource!!.getDataSource().connection
-        val list = jdbc.query(conn, this.sql())
+        val list = database.query(conn, this.sql())
         if (list.isEmpty()) {
             return null
         }
@@ -528,7 +522,7 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DataSource? = null)
         this.limit(1)
 
         val conn = this.dataSource!!.getDataSource().connection
-        val list = jdbc.query(conn, this.sql())
+        val list = database.query(conn, this.sql())
         if (list.isEmpty()) {
             return null
         }

@@ -2,7 +2,6 @@ package query.select
 
 import expr.QueryTableColumn
 import java.lang.Exception
-import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.declaredMemberProperties
@@ -12,12 +11,12 @@ import kotlin.reflect.jvm.javaField
 abstract class SelectQueryImpl : SelectQuery {
     fun queryMap(): List<Map<String, Any>> {
         val conn = this.dataSource!!.getDataSource().connection
-        return jdbc.query(conn, this.sql())
+        return database.query(conn, this.sql())
     }
 
     fun <T : Any> query(clazz: Class<T>): List<T> {
         val conn = this.dataSource!!.getDataSource().connection
-        val list = jdbc.query(conn, this.sql())
+        val list = database.query(conn, this.sql())
         val companion = clazz.kotlin.companionObjectInstance ?: throw Exception("实体类需要添加伴生对象")
         val companionClass = companion::class
         val columns = companionClass.declaredMemberProperties
@@ -43,7 +42,7 @@ abstract class SelectQueryImpl : SelectQuery {
 
     inline fun <reified T> query(): List<T> {
         val conn = this.dataSource!!.getDataSource().connection
-        val list = jdbc.query(conn, this.sql())
+        val list = database.query(conn, this.sql())
         val companion = T::class.companionObjectInstance ?: throw Exception("实体类需要添加伴生对象")
         val companionClass = companion::class
         val columns = companionClass.declaredMemberProperties
@@ -69,7 +68,7 @@ abstract class SelectQueryImpl : SelectQuery {
 
     fun count(): Int {
         val conn = this.dataSource!!.getDataSource().connection
-        return jdbc.queryCount(conn, this.sql())
+        return database.queryCount(conn, this.sql())
     }
 
     fun exist(): Boolean {

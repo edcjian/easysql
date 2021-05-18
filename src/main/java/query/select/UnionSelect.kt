@@ -6,7 +6,7 @@ import com.alibaba.druid.sql.ast.statement.SQLUnionOperator
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery
 import com.alibaba.druid.sql.visitor.VisitorFeature
 import expr.DB
-import jdbc.DataSource
+import database.DBConnection
 import visitor.getDbType
 
 class UnionSelect(
@@ -14,7 +14,7 @@ class UnionSelect(
     operator: SQLUnionOperator,
     right: SelectQuery,
     var db: DB = DB.MYSQL,
-    override var dataSource: DataSource? = null
+    override var dataSource: DBConnection? = null
 ) :
     SelectQueryImpl() {
     private var unionSelect = SQLUnionQuery()
