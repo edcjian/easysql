@@ -1,5 +1,5 @@
 package expr
 
 enum class DB {
-    MYSQL, ORACLE, PGSQL, HIVE
+    MYSQL, ORACLE, PGSQL, HIVE, SQLSERVER, DB2, SQLITE,CLICKHOUSE
 }
