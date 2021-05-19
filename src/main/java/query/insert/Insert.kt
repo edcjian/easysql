@@ -71,6 +71,10 @@ class Insert(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
         )
     }
 
+    override fun toString(): String {
+        return sql()
+    }
+
     fun exec(): Int {
         val conn = this.dataSource!!.getDataSource().connection
         return database.exec(conn, this.sql())

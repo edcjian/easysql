@@ -74,4 +74,8 @@ abstract class SelectQueryImpl : SelectQuery {
     fun exist(): Boolean {
         return count() > 0
     }
+
+    override fun toString(): String {
+        return sql()
+    }
 }
