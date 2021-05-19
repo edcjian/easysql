@@ -8,12 +8,12 @@ import com.alibaba.druid.sql.visitor.VisitorFeature
 import expr.DB
 import expr.Query
 import expr.TableSchema
-import database.DBConnection
 import visitor.getDbType
 import visitor.getExpr
 import visitor.getQueryExpr
+import java.sql.Connection
 
-class Update(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
+class Update(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
     private var sqlUpdate = SQLUpdateStatement()
 
     init {
@@ -134,7 +134,6 @@ class Update(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
     }
 
     fun exec(): Int {
-        val conn = this.dataSource!!.getDataSource().connection
-        return database.exec(conn, this.sql())
+        return database.exec(conn!!, this.sql())
     }
 }

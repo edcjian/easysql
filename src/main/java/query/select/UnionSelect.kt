@@ -11,19 +11,20 @@ import dsl.alias
 import dsl.count
 import visitor.getDbType
 import visitor.getQueryExpr
+import java.sql.Connection
 
 class UnionSelect(
     left: SelectQuery,
     operator: SQLUnionOperator,
     right: SelectQuery,
     var db: DB = DB.MYSQL,
-    override var dataSource: DBConnection? = null
+    override var conn: Connection? = null
 ) :
     SelectQueryImpl() {
     private var unionSelect = SQLUnionQuery()
 
     init {
-        this.dataSource = left.dataSource
+        this.conn = left.conn
         unionSelect.dbType = getDbType(db)
         unionSelect.left = left.getSelect()
         unionSelect.operator = operator
@@ -43,8 +44,7 @@ class UnionSelect(
 
     override fun fetchCount(): Long {
         val select = Select(this.db).select(count() alias "count").from(this).alias("t")
-        val conn = this.dataSource!!.getDataSource().connection
-        val result = database.query(conn, select.sql())
+        val result = database.query(conn!!, select.sql())
         return result[0]["count"] as Long
     }
 }

@@ -10,11 +10,12 @@ import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr
 import com.alibaba.druid.sql.ast.statement.*
 import com.alibaba.druid.sql.visitor.VisitorFeature
-import dsl.*
+import dsl.column
+import dsl.count
 import expr.*
-import database.DBConnection
-import visitor.*
-import java.lang.Exception
+import visitor.getDbType
+import visitor.getQueryExpr
+import java.sql.Connection
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.declaredMemberProperties
@@ -22,7 +23,7 @@ import kotlin.reflect.full.declaredMembers
 import kotlin.reflect.jvm.javaField
 
 
-class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = null) : SelectQueryImpl(), Cloneable {
+class Select(var db: DB = DB.MYSQL, override var conn: Connection? = null) : SelectQueryImpl(), Cloneable {
     private var sqlSelect = SQLSelectQueryBlock()
 
     private lateinit var joinLeft: SQLTableSourceImpl
@@ -471,8 +472,7 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = nul
             VisitorFeature.OutputNameQuote
         )
 
-        val conn = this.dataSource!!.getDataSource().connection
-        val list = database.query(conn, sql)
+        val list = database.query(conn!!, sql)
         if (list.isEmpty()) {
             return null
         }
@@ -513,8 +513,7 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = nul
             VisitorFeature.OutputNameQuote
         )
 
-        val conn = this.dataSource!!.getDataSource().connection
-        val list = database.query(conn, sql)
+        val list = database.query(conn!!, sql)
         if (list.isEmpty()) {
             return null
         }
@@ -555,8 +554,7 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = nul
             VisitorFeature.OutputNameQuote
         )
 
-        val conn = this.dataSource!!.getDataSource().connection
-        val list = database.query(conn, sql)
+        val list = database.query(conn!!, sql)
         if (list.isEmpty()) {
             return null
         }
@@ -569,7 +567,6 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = nul
         selectCopy.limit = null
         selectCopy.selectList.clear()
         selectCopy.addSelectItem(getQueryExpr(count(), this.db).expr, "count")
-        val conn = this.dataSource!!.getDataSource().connection
 
         val sql = SQLUtils.toSQLString(
             selectCopy,
@@ -578,7 +575,7 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = nul
             VisitorFeature.OutputNameQuote
         )
 
-        val result = database.query(conn, sql)
+        val result = database.query(conn!!, sql)
         return result[0]["count"] as Long
     }
 

@@ -4,12 +4,12 @@ import com.alibaba.druid.sql.SQLUtils
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr
 import com.alibaba.druid.sql.ast.statement.SQLTruncateStatement
 import com.alibaba.druid.sql.visitor.VisitorFeature
-import database.DBConnection
 import expr.DB
 import expr.TableSchema
 import visitor.getDbType
+import java.sql.Connection
 
-class Truncate(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
+class Truncate(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
     private var sqlTruncate = SQLTruncateStatement()
 
     init {
@@ -42,7 +42,6 @@ class Truncate(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
     }
 
     fun exec(): Int {
-        val conn = this.dataSource!!.getDataSource().connection
-        return database.exec(conn, this.sql())
+        return database.exec(conn!!, this.sql())
     }
 }

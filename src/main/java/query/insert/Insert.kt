@@ -8,12 +8,12 @@ import com.alibaba.druid.sql.visitor.VisitorFeature
 import expr.DB
 import expr.QueryTableColumn
 import expr.TableSchema
-import database.DBConnection
 import visitor.getDbType
 import visitor.getExpr
+import java.sql.Connection
 import kotlin.reflect.full.declaredMemberProperties
 
-class Insert(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
+class Insert(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
     private var sqlInsert = SQLInsertStatement()
 
     private var columns = mutableListOf<String>()
@@ -75,7 +75,6 @@ class Insert(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
     }
 
     fun exec(): Int {
-        val conn = this.dataSource!!.getDataSource().connection
-        return database.exec(conn, this.sql())
+        return database.exec(conn!!, this.sql())
     }
 }

@@ -18,32 +18,32 @@ class DBConnection(source: DataSource, var db: DB) {
     fun getDataSource() = dataSource
 
     infix fun select(query: Query): Select {
-        val select = Select(db, this)
+        val select = Select(db, this.dataSource.connection)
         select.invoke(query)
         return select
     }
 
     infix fun select(query: List<Query>): Select {
-        val select = Select(db, this)
+        val select = Select(db, this.dataSource.connection)
         select.invoke(query)
         return select
     }
 
     fun select(vararg query: Query): Select {
-        val select = Select(db, this)
+        val select = Select(db, this.dataSource.connection)
         select.select(*query)
         return select
     }
 
     fun select(): Select {
-        return Select(db, this)
+        return Select(db, this.dataSource.connection)
     }
 
     infix fun update(table: String): Update {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val update = Update(db, this)
+        val update = Update(db, this.dataSource.connection)
         update.update(table)
         return update
     }
@@ -52,7 +52,7 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val update = Update(db, this)
+        val update = Update(db, this.dataSource.connection)
         update.update(table)
         return update
     }
@@ -61,7 +61,7 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val insert = Insert(db, this)
+        val insert = Insert(db, this.dataSource.connection)
         insert.into(table)
         return insert
     }
@@ -70,7 +70,7 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val delete = Delete(db, this)
+        val delete = Delete(db, this.dataSource.connection)
         delete.from(table)
         return delete
     }
@@ -79,7 +79,7 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val delete = Delete(db, this)
+        val delete = Delete(db, this.dataSource.connection)
         delete.from(table)
         return delete
     }
@@ -88,7 +88,7 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val truncate = Truncate(db, this)
+        val truncate = Truncate(db, this.dataSource.connection)
         truncate.truncate(table)
         return truncate
     }
@@ -97,14 +97,15 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val truncate = Truncate(db, this)
+        val truncate = Truncate(db, this.dataSource.connection)
         truncate.truncate(table)
         return truncate
     }
 
-    fun transaction() {
+    infix fun transaction(query: (DBConnection) -> Unit) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
+        query(this)
     }
 }
