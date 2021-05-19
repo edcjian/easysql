@@ -29,11 +29,15 @@ class Update(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
         return update(table.tableName)
     }
 
-    infix fun <T : Any> set(item: Pair<Query, T>): Update {
+    infix fun set(item: Pair<Query, Any>): Update {
         val (column, value) = item
         val updateItem = SQLUpdateSetItem()
         updateItem.column = getQueryExpr(column, this.db).expr
-        updateItem.value = getExpr(value)
+        if (value is Query) {
+            updateItem.value = getQueryExpr(value, this.db).expr
+        } else {
+            updateItem.value = getExpr(value)
+        }
         this.sqlUpdate.addItem(updateItem)
 
         return this
@@ -44,7 +48,11 @@ class Update(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
             val (column, value) = it
             val updateItem = SQLUpdateSetItem()
             updateItem.column = getQueryExpr(column, this.db).expr
-            updateItem.value = getExpr(value)
+            if (value is Query) {
+                updateItem.value = getQueryExpr(value, this.db).expr
+            } else {
+                updateItem.value = getExpr(value)
+            }
             this.sqlUpdate.addItem(updateItem)
         }
 
@@ -56,7 +64,11 @@ class Update(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
             val (column, value) = it
             val updateItem = SQLUpdateSetItem()
             updateItem.column = getQueryExpr(column, this.db).expr
-            updateItem.value = getExpr(value)
+            if (value is Query) {
+                updateItem.value = getQueryExpr(value, this.db).expr
+            } else {
+                updateItem.value = getExpr(value)
+            }
             this.sqlUpdate.addItem(updateItem)
         }
 
