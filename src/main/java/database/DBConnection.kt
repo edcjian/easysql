@@ -6,6 +6,7 @@ import expr.TableSchema
 import query.delete.Delete
 import query.insert.Insert
 import query.select.Select
+import query.truncate.Truncate
 import query.update.Update
 import visitor.checkOLAP
 import java.sql.SQLException
@@ -81,5 +82,29 @@ class DBConnection(source: DataSource, var db: DB) {
         val delete = Delete(db, this)
         delete.from(table)
         return delete
+    }
+
+    infix fun truncate(table: String): Truncate {
+        if (checkOLAP(this.db)) {
+            throw SQLException("分析型数据库不支持此操作")
+        }
+        val truncate = Truncate(db, this)
+        truncate.truncate(table)
+        return truncate
+    }
+
+    infix fun truncate(table: TableSchema): Truncate {
+        if (checkOLAP(this.db)) {
+            throw SQLException("分析型数据库不支持此操作")
+        }
+        val truncate = Truncate(db, this)
+        truncate.truncate(table)
+        return truncate
+    }
+
+    fun transaction() {
+        if (checkOLAP(this.db)) {
+            throw SQLException("分析型数据库不支持此操作")
+        }
     }
 }
