@@ -13,6 +13,9 @@ import java.lang.Exception
 import java.sql.Connection
 import java.sql.SQLException
 import javax.sql.DataSource
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 class DBConnection(source: DataSource, var db: DB) {
     private var dataSource: DataSource = source
@@ -104,7 +107,7 @@ class DBConnection(source: DataSource, var db: DB) {
         return truncate
     }
 
-    infix fun transaction(query: (DBTransaction) -> Unit) {
+    infix fun transaction(query: DBTransaction.() -> Unit) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
