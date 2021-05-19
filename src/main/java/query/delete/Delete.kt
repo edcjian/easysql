@@ -11,7 +11,7 @@ import visitor.getDbType
 import visitor.getQueryExpr
 import java.sql.Connection
 
-class Delete(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
+class Delete(var db: DB = DB.MYSQL, private var conn: Connection? = null, private var isTransaction: Boolean = false) {
     private var sqlDelete = SQLDeleteStatement()
 
     init {
@@ -62,6 +62,10 @@ class Delete(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
     }
 
     fun exec(): Int {
-        return database.exec(conn!!, this.sql())
+        val result = database.exec(conn!!, this.sql())
+        if (!isTransaction) {
+            conn!!.close()
+        }
+        return result
     }
 }

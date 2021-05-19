@@ -23,7 +23,12 @@ import kotlin.reflect.full.declaredMembers
 import kotlin.reflect.jvm.javaField
 
 
-class Select(var db: DB = DB.MYSQL, override var conn: Connection? = null) : SelectQueryImpl(), Cloneable {
+class Select(
+    var db: DB = DB.MYSQL,
+    override var conn: Connection? = null,
+    override var isTransaction: Boolean = false
+) :
+    SelectQueryImpl() {
     private var sqlSelect = SQLSelectQueryBlock()
 
     private lateinit var joinLeft: SQLTableSourceImpl
@@ -473,6 +478,10 @@ class Select(var db: DB = DB.MYSQL, override var conn: Connection? = null) : Sel
         )
 
         val list = database.query(conn!!, sql)
+        if (!isTransaction) {
+            conn!!.close()
+        }
+
         if (list.isEmpty()) {
             return null
         }
@@ -514,6 +523,10 @@ class Select(var db: DB = DB.MYSQL, override var conn: Connection? = null) : Sel
         )
 
         val list = database.query(conn!!, sql)
+        if (!isTransaction) {
+            conn!!.close()
+        }
+
         if (list.isEmpty()) {
             return null
         }
@@ -555,6 +568,10 @@ class Select(var db: DB = DB.MYSQL, override var conn: Connection? = null) : Sel
         )
 
         val list = database.query(conn!!, sql)
+        if (!isTransaction) {
+            conn!!.close()
+        }
+
         if (list.isEmpty()) {
             return null
         }
@@ -576,6 +593,10 @@ class Select(var db: DB = DB.MYSQL, override var conn: Connection? = null) : Sel
         )
 
         val result = database.query(conn!!, sql)
+        if (!isTransaction) {
+            conn!!.close()
+        }
+
         return result[0]["count"] as Long
     }
 

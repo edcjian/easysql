@@ -9,43 +9,37 @@ import query.select.Select
 import query.truncate.Truncate
 import query.update.Update
 import visitor.checkOLAP
-import java.lang.Exception
 import java.sql.Connection
 import java.sql.SQLException
-import javax.sql.DataSource
 
-class DBConnection(source: DataSource, var db: DB) {
-    private var dataSource: DataSource = source
-
-    fun getDataSource() = dataSource
-
+class DBTransaction(var db: DB, var conn: Connection? = null) {
     infix fun select(query: Query): Select {
-        val select = Select(db, this.dataSource.connection)
+        val select = Select(db, this.conn, true)
         select.invoke(query)
         return select
     }
 
     infix fun select(query: List<Query>): Select {
-        val select = Select(db, this.dataSource.connection)
+        val select = Select(db, this.conn, true)
         select.invoke(query)
         return select
     }
 
     fun select(vararg query: Query): Select {
-        val select = Select(db, this.dataSource.connection)
+        val select = Select(db, this.conn, true)
         select.select(*query)
         return select
     }
 
     fun select(): Select {
-        return Select(db, this.dataSource.connection)
+        return Select(db, this.conn, true)
     }
 
     infix fun update(table: String): Update {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val update = Update(db, this.dataSource.connection)
+        val update = Update(db, this.conn, true)
         update.update(table)
         return update
     }
@@ -54,7 +48,7 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val update = Update(db, this.dataSource.connection)
+        val update = Update(db, this.conn, true)
         update.update(table)
         return update
     }
@@ -63,7 +57,7 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val insert = Insert(db, this.dataSource.connection)
+        val insert = Insert(db, this.conn, true)
         insert.into(table)
         return insert
     }
@@ -72,7 +66,7 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val delete = Delete(db, this.dataSource.connection)
+        val delete = Delete(db, this.conn, true)
         delete.from(table)
         return delete
     }
@@ -81,7 +75,7 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val delete = Delete(db, this.dataSource.connection)
+        val delete = Delete(db, this.conn, true)
         delete.from(table)
         return delete
     }
@@ -90,7 +84,7 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val truncate = Truncate(db, this.dataSource.connection)
+        val truncate = Truncate(db, this.conn, true)
         truncate.truncate(table)
         return truncate
     }
@@ -99,26 +93,8 @@ class DBConnection(source: DataSource, var db: DB) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
-        val truncate = Truncate(db, this.dataSource.connection)
+        val truncate = Truncate(db, this.conn, true)
         truncate.truncate(table)
         return truncate
-    }
-
-    infix fun transaction(query: (DBTransaction) -> Unit) {
-        if (checkOLAP(this.db)) {
-            throw SQLException("分析型数据库不支持此操作")
-        }
-        val conn = this.dataSource.connection
-        conn.autoCommit = false
-        try {
-            query(DBTransaction(this.db, conn))
-            conn.commit()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            conn.rollback()
-        } finally {
-            conn.autoCommit = true
-            conn.close()
-        }
     }
 }

@@ -9,11 +9,18 @@ import kotlin.reflect.jvm.javaField
 
 abstract class SelectQueryImpl : SelectQuery {
     fun queryMap(): List<Map<String, Any>> {
-        return database.query(conn!!, this.sql())
+        val result = database.query(conn!!, this.sql())
+        if (!isTransaction) {
+            conn!!.close()
+        }
+        return result
     }
 
     fun <T : Any> query(clazz: Class<T>): List<T> {
         val list = database.query(conn!!, this.sql())
+        if (!isTransaction) {
+            conn!!.close()
+        }
         val companion = clazz.kotlin.companionObjectInstance ?: throw Exception("实体类需要添加伴生对象")
         val companionClass = companion::class
         val columns = companionClass.declaredMemberProperties
@@ -39,6 +46,9 @@ abstract class SelectQueryImpl : SelectQuery {
 
     inline fun <reified T> query(): List<T> {
         val list = database.query(conn!!, this.sql())
+        if (!isTransaction) {
+            conn!!.close()
+        }
         val companion = T::class.companionObjectInstance ?: throw Exception("实体类需要添加伴生对象")
         val companionClass = companion::class
         val columns = companionClass.declaredMemberProperties
@@ -63,7 +73,11 @@ abstract class SelectQueryImpl : SelectQuery {
     }
 
     open fun fetchCount(): Long {
-        return database.queryCount(conn!!, this.sql()).toLong()
+        val result = database.queryCount(conn!!, this.sql()).toLong()
+        if (!isTransaction) {
+            conn!!.close()
+        }
+        return result
     }
 
     open fun exist(): Boolean {

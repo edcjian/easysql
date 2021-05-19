@@ -9,7 +9,11 @@ import expr.TableSchema
 import visitor.getDbType
 import java.sql.Connection
 
-class Truncate(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
+class Truncate(
+    var db: DB = DB.MYSQL,
+    private var conn: Connection? = null,
+    private var isTransaction: Boolean = false
+) {
     private var sqlTruncate = SQLTruncateStatement()
 
     init {
@@ -42,6 +46,10 @@ class Truncate(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
     }
 
     fun exec(): Int {
-        return database.exec(conn!!, this.sql())
+        val result = database.exec(conn!!, this.sql())
+        if (!isTransaction) {
+            conn!!.close()
+        }
+        return result
     }
 }

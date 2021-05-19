@@ -13,7 +13,7 @@ import visitor.getExpr
 import visitor.getQueryExpr
 import java.sql.Connection
 
-class Update(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
+class Update(var db: DB = DB.MYSQL, private var conn: Connection? = null, private var isTransaction: Boolean = false) {
     private var sqlUpdate = SQLUpdateStatement()
 
     init {
@@ -134,6 +134,10 @@ class Update(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
     }
 
     fun exec(): Int {
-        return database.exec(conn!!, this.sql())
+        val result = database.exec(conn!!, this.sql())
+        if (!isTransaction) {
+            conn!!.close()
+        }
+        return result
     }
 }

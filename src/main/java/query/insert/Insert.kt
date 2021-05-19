@@ -13,7 +13,7 @@ import visitor.getExpr
 import java.sql.Connection
 import kotlin.reflect.full.declaredMemberProperties
 
-class Insert(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
+class Insert(var db: DB = DB.MYSQL, private var conn: Connection? = null, private var isTransaction: Boolean = false) {
     private var sqlInsert = SQLInsertStatement()
 
     private var columns = mutableListOf<String>()
@@ -75,6 +75,10 @@ class Insert(var db: DB = DB.MYSQL, private var conn: Connection? = null) {
     }
 
     fun exec(): Int {
-        return database.exec(conn!!, this.sql())
+        val result = database.exec(conn!!, this.sql())
+        if (!isTransaction) {
+            conn!!.close()
+        }
+        return result
     }
 }

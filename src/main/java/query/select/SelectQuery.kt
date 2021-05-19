@@ -7,6 +7,8 @@ import java.sql.Connection
 interface SelectQuery {
     var conn: Connection?
 
+    var isTransaction: Boolean
+
     fun sql(): String
 
     fun getSelect(): SQLSelectQuery

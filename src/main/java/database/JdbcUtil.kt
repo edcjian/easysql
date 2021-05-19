@@ -25,7 +25,6 @@ fun query(conn: Connection, sql: String): List<Map<String, Any>> {
     } catch (e: SQLException) {
         e.printStackTrace()
     } finally {
-        conn.close()
         stmt?.close()
         rs?.close()
     }
@@ -45,7 +44,6 @@ fun queryCount(conn: Connection, sql: String): Int {
     } catch (e: SQLException) {
         e.printStackTrace()
     } finally {
-        conn.close()
         stmt?.close()
         rs?.close()
     }
@@ -63,7 +61,6 @@ fun exec(conn: Connection, sql: String): Int {
     } catch (e: SQLException) {
         e.printStackTrace()
     } finally {
-        conn.close()
         stmt?.close()
     }
 

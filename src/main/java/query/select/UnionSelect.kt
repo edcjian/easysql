@@ -18,7 +18,8 @@ class UnionSelect(
     operator: SQLUnionOperator,
     right: SelectQuery,
     var db: DB = DB.MYSQL,
-    override var conn: Connection? = null
+    override var conn: Connection? = null,
+    override var isTransaction: Boolean = false
 ) :
     SelectQueryImpl() {
     private var unionSelect = SQLUnionQuery()
@@ -45,6 +46,9 @@ class UnionSelect(
     override fun fetchCount(): Long {
         val select = Select(this.db).select(count() alias "count").from(this).alias("t")
         val result = database.query(conn!!, select.sql())
+        if (!isTransaction) {
+            conn!!.close()
+        }
         return result[0]["count"] as Long
     }
 }
