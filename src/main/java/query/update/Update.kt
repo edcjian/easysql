@@ -75,6 +75,30 @@ class Update(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
         return this
     }
 
+    fun incr(column: Query, value: Int): Update {
+        val updateItem = SQLUpdateSetItem()
+        updateItem.column = getQueryExpr(column, this.db).expr
+        updateItem.value = getQueryExpr(column + value, this.db).expr
+        this.sqlUpdate.addItem(updateItem)
+        return this
+    }
+
+    infix fun incr(column: Query): Update {
+        return incr(column, 1)
+    }
+
+    fun decr(column: Query, value: Int): Update {
+        val updateItem = SQLUpdateSetItem()
+        updateItem.column = getQueryExpr(column, this.db).expr
+        updateItem.value = getQueryExpr(column - value, this.db).expr
+        this.sqlUpdate.addItem(updateItem)
+        return this
+    }
+
+    infix fun decr(column: Query): Update {
+        return decr(column, 1)
+    }
+
     infix fun where(condition: Query): Update {
         this.sqlUpdate.addCondition(getQueryExpr(condition, this.db).expr)
         return this
