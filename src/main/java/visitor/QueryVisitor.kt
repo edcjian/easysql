@@ -402,3 +402,10 @@ fun getDbType(dbType: DB): DbType {
         DB.CLICKHOUSE -> DbType.clickhouse
     }
 }
+
+fun checkOLAP(dbType: DB): Boolean {
+    return when (dbType) {
+        DB.HIVE, DB.CLICKHOUSE -> true
+        else -> false
+    }
+}
