@@ -116,6 +116,8 @@ data class QueryBetween<T>(
     override var alias: String? = null
 ) : Query()
 
+data class QueryAllColumn(val owner: String? = null, override var alias: String? = null) : Query()
+
 data class CaseBranch<T>(val query: Query, val then: T)
 
 data class AggOrderBy(val query: Query, val order: SQLOrderingSpecification)

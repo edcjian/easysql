@@ -5,6 +5,7 @@ import com.alibaba.druid.sql.ast.SQLExpr
 import com.alibaba.druid.sql.ast.SQLOrderBy
 import com.alibaba.druid.sql.ast.expr.*
 import com.alibaba.druid.sql.ast.statement.SQLCharacterDataType
+import com.alibaba.druid.sql.ast.statement.SQLExprTableSource
 import com.alibaba.druid.sql.ast.statement.SQLSelect
 import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem
 import dsl.cast
@@ -46,6 +47,8 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
         is QueryInSubQuery -> visitQueryInSubQuery(query, dbType)
 
         is QueryBetween<*> -> visitQueryBetween(query, dbType)
+
+        is QueryAllColumn -> visitQueryAllColumn(query)
     }
 }
 
@@ -219,6 +222,15 @@ fun visitQueryBetween(query: QueryBetween<*>, dbType: DB): QueryExpr {
     expr.beginExpr = getExpr(query.start)
     expr.endExpr = getExpr(query.end)
     expr.isNot = query.isNot
+    return QueryExpr(expr)
+}
+
+fun visitQueryAllColumn(query: QueryAllColumn): QueryExpr {
+    val expr = SQLAllColumnExpr()
+    if (!query.owner.isNullOrEmpty()) {
+        expr.resolvedTableSource = SQLExprTableSource(query.owner)
+    }
+
     return QueryExpr(expr)
 }
 

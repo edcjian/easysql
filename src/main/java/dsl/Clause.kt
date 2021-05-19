@@ -29,6 +29,10 @@ fun TableSchema.column(name: String): QueryTableColumn {
     return QueryTableColumn(this.tableName, name)
 }
 
+fun allColumn(): QueryAllColumn {
+    return QueryAllColumn(null)
+}
+
 fun QueryTableColumn.incr(): QueryTableColumn {
     this.incr = true
     return this
