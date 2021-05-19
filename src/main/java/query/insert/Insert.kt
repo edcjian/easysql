@@ -45,7 +45,6 @@ class Insert(var db: DB = DB.MYSQL, var dataSource: DBConnection? = null) {
         val clazz = obj::class
         val properties = clazz.declaredMemberProperties.map { it.name to it.getter.call(obj) }.toMap()
         val values = columns.map { properties[it] }
-        println(columns)
 
         val valuesClause = SQLInsertStatement.ValuesClause()
         values.forEach { valuesClause.addValue(getExpr(it)) }
