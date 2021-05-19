@@ -22,7 +22,7 @@ import kotlin.reflect.full.declaredMembers
 import kotlin.reflect.jvm.javaField
 
 
-class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = null) : SelectQueryImpl() {
+class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = null) : SelectQueryImpl(), Cloneable {
     private var sqlSelect = SQLSelectQueryBlock()
 
     private lateinit var joinLeft: SQLTableSourceImpl
@@ -31,6 +31,8 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = nul
         sqlSelect.addSelectItem(SQLAllColumnExpr())
         sqlSelect.dbType = getDbType(db)
     }
+
+    fun getSqlSelect() = this.sqlSelect
 
     fun from(table: String, alias: String? = null): Select {
         val from = SQLExprTableSource(table)
@@ -457,9 +459,20 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = nul
     }
 
     fun <T : Any> find(clazz: Class<T>): T? {
-        this.limit(1)
+        val selectCopy = this.sqlSelect.clone()
+        val limit = SQLLimit()
+        limit.offset = selectCopy.limit.offset
+        limit.setRowCount(1)
+        selectCopy.limit = limit
+        val sql = SQLUtils.toSQLString(
+            selectCopy,
+            sqlSelect.dbType,
+            SQLUtils.FormatOption(),
+            VisitorFeature.OutputNameQuote
+        )
+
         val conn = this.dataSource!!.getDataSource().connection
-        val list = database.query(conn, this.sql())
+        val list = database.query(conn, sql)
         if (list.isEmpty()) {
             return null
         }
@@ -488,9 +501,20 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = nul
     }
 
     inline fun <reified T> find(): T? {
-        this.limit(1)
+        val selectCopy = getSqlSelect().clone()
+        val limit = SQLLimit()
+        limit.offset = selectCopy.limit.offset
+        limit.setRowCount(1)
+        selectCopy.limit = limit
+        val sql = SQLUtils.toSQLString(
+            selectCopy,
+            getSqlSelect().dbType,
+            SQLUtils.FormatOption(),
+            VisitorFeature.OutputNameQuote
+        )
+
         val conn = this.dataSource!!.getDataSource().connection
-        val list = database.query(conn, this.sql())
+        val list = database.query(conn, sql)
         if (list.isEmpty()) {
             return null
         }
@@ -519,14 +543,47 @@ class Select(var db: DB = DB.MYSQL, override var dataSource: DBConnection? = nul
     }
 
     fun findMap(): Map<String, Any>? {
-        this.limit(1)
+        val selectCopy = this.sqlSelect.clone()
+        val limit = SQLLimit()
+        limit.offset = selectCopy.limit.offset
+        limit.setRowCount(1)
+        selectCopy.limit = limit
+        val sql = SQLUtils.toSQLString(
+            selectCopy,
+            sqlSelect.dbType,
+            SQLUtils.FormatOption(),
+            VisitorFeature.OutputNameQuote
+        )
 
         val conn = this.dataSource!!.getDataSource().connection
-        val list = database.query(conn, this.sql())
+        val list = database.query(conn, sql)
         if (list.isEmpty()) {
             return null
         }
 
         return list[0]
+    }
+
+    override fun fetchCount(): Long {
+        val selectCopy = this.sqlSelect.clone()
+        selectCopy.limit = null
+        selectCopy.selectList.clear()
+        selectCopy.addSelectItem(getQueryExpr(count(), this.db).expr, "count")
+        val conn = this.dataSource!!.getDataSource().connection
+
+        val sql = SQLUtils.toSQLString(
+            selectCopy,
+            sqlSelect.dbType,
+            SQLUtils.FormatOption(),
+            VisitorFeature.OutputNameQuote
+        )
+
+        val result = database.query(conn, sql)
+        return result[0]["count"] as Long
+    }
+
+    override fun exist(): Boolean {
+        val result = this.findMap()
+        return !result.isNullOrEmpty()
     }
 }

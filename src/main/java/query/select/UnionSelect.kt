@@ -7,7 +7,10 @@ import com.alibaba.druid.sql.ast.statement.SQLUnionQuery
 import com.alibaba.druid.sql.visitor.VisitorFeature
 import expr.DB
 import database.DBConnection
+import dsl.alias
+import dsl.count
 import visitor.getDbType
+import visitor.getQueryExpr
 
 class UnionSelect(
     left: SelectQuery,
@@ -36,5 +39,12 @@ class UnionSelect(
 
     override fun getDbType(): DB {
         return this.db
+    }
+
+    override fun fetchCount(): Long {
+        val select = Select(this.db).select(count() alias "count").from(this).alias("t")
+        val conn = this.dataSource!!.getDataSource().connection
+        val result = database.query(conn, select.sql())
+        return result[0]["count"] as Long
     }
 }

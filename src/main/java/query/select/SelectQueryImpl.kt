@@ -66,13 +66,13 @@ abstract class SelectQueryImpl : SelectQuery {
         }
     }
 
-    fun count(): Int {
+    open fun fetchCount(): Long {
         val conn = this.dataSource!!.getDataSource().connection
-        return database.queryCount(conn, this.sql())
+        return database.queryCount(conn, this.sql()).toLong()
     }
 
-    fun exist(): Boolean {
-        return count() > 0
+    open fun exist(): Boolean {
+        return fetchCount() > 0
     }
 
     override fun toString(): String {
