@@ -397,7 +397,7 @@ fun getDbType(dbType: DB): DbType {
         DB.PGSQL -> DbType.postgresql
         DB.HIVE -> DbType.hive
         DB.SQLSERVER -> DbType.sqlserver
-        DB.SQLITE -> DbType.db2
+        DB.SQLITE -> DbType.sqlite
         DB.DB2 -> DbType.db2
         DB.CLICKHOUSE -> DbType.clickhouse
     }
