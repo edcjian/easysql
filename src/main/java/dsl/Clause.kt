@@ -1,6 +1,7 @@
 package dsl
 
 import com.alibaba.druid.sql.SQLUtils
+import com.alibaba.druid.sql.ast.SQLOrderingSpecification
 import expr.*
 
 infix fun String.alias(alias: String): Query {
@@ -74,4 +75,80 @@ infix fun <T> QueryCase<T>.elseIs(value: T?): QueryCase<T> {
     } else {
         this
     }
+}
+
+fun orderBy(order: SQLOrderingSpecification = SQLOrderingSpecification.ASC, vararg query: Query): List<AggOrderBy> {
+    return query.map { AggOrderBy(it, order) }
+}
+
+fun orderByAsc(vararg query: Query): List<AggOrderBy> {
+    return orderBy(SQLOrderingSpecification.ASC, *query)
+}
+
+fun orderByDesc(vararg query: Query): List<AggOrderBy> {
+    return orderBy(SQLOrderingSpecification.DESC, *query)
+}
+
+fun List<AggOrderBy>.orderBy(
+    order: SQLOrderingSpecification = SQLOrderingSpecification.ASC,
+    vararg query: Query
+): List<AggOrderBy> {
+    val list = query.map { AggOrderBy(it, order) }
+    return this + list
+}
+
+fun List<AggOrderBy>.orderByAsc(
+    vararg query: Query
+): List<AggOrderBy> {
+    return this.orderBy(SQLOrderingSpecification.ASC, *query)
+}
+
+fun List<AggOrderBy>.orderByDesc(
+    vararg query: Query
+): List<AggOrderBy> {
+    return this.orderBy(SQLOrderingSpecification.DESC, *query)
+}
+
+fun QueryAggFunction.over(partitionBy: List<Query> = listOf(), orderBy: List<AggOrderBy> = listOf()): QueryOver {
+    return QueryOver(this, partitionBy, orderBy)
+}
+
+fun QueryOver.partitionBy(vararg query: Query): QueryOver {
+    return QueryOver(this.function, this.partitionBy + query, this.orderBy)
+}
+
+infix fun QueryOver.partitionBy(query: Query): QueryOver {
+    return QueryOver(this.function, this.partitionBy + query, this.orderBy)
+}
+
+infix fun QueryOver.partitionBy(query: List<Query>): QueryOver {
+    return QueryOver(this.function, this.partitionBy + query, this.orderBy)
+}
+
+fun QueryOver.orderByAsc(vararg order: Query): QueryOver {
+    val orderBy = order.map { AggOrderBy(it, SQLOrderingSpecification.ASC) }
+    return QueryOver(this.function, this.partitionBy, this.orderBy + orderBy)
+}
+
+fun QueryOver.orderByDesc(vararg order: Query): QueryOver {
+    val orderBy = order.map { AggOrderBy(it, SQLOrderingSpecification.DESC) }
+    return QueryOver(this.function, this.partitionBy, this.orderBy + orderBy)
+}
+
+infix fun QueryOver.orderByAsc(order: Query): QueryOver {
+    return QueryOver(this.function, this.partitionBy, this.orderBy + AggOrderBy(order, SQLOrderingSpecification.ASC))
+}
+
+infix fun QueryOver.orderByDesc(order: Query): QueryOver {
+    return QueryOver(this.function, this.partitionBy, this.orderBy + AggOrderBy(order, SQLOrderingSpecification.DESC))
+}
+
+infix fun QueryOver.orderByAsc(order: List<Query>): QueryOver {
+    val orderBy = order.map { AggOrderBy(it, SQLOrderingSpecification.ASC) }
+    return QueryOver(this.function, this.partitionBy, this.orderBy + orderBy)
+}
+
+infix fun QueryOver.orderByDesc(order: List<Query>): QueryOver {
+    val orderBy = order.map { AggOrderBy(it, SQLOrderingSpecification.DESC) }
+    return QueryOver(this.function, this.partitionBy, this.orderBy + orderBy)
 }

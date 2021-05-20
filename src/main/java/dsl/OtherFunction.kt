@@ -55,35 +55,3 @@ fun findInSet(value: String, query: Query): Query {
 fun jsonLength(query: Query): Query {
     return QueryExprFunction("*JSON_LENGTH", listOf(query))
 }
-
-fun orderBy(order: SQLOrderingSpecification = SQLOrderingSpecification.ASC, vararg query: Query): List<AggOrderBy> {
-    return query.map { AggOrderBy(it, order) }
-}
-
-fun orderByAsc(vararg query: Query): List<AggOrderBy> {
-    return orderBy(SQLOrderingSpecification.ASC, *query)
-}
-
-fun orderByDesc(vararg query: Query): List<AggOrderBy> {
-    return orderBy(SQLOrderingSpecification.DESC, *query)
-}
-
-fun List<AggOrderBy>.orderBy(
-        order: SQLOrderingSpecification = SQLOrderingSpecification.ASC,
-        vararg query: Query
-): List<AggOrderBy> {
-    val list = query.map { AggOrderBy(it, order) }
-    return this + list
-}
-
-fun List<AggOrderBy>.orderByAsc(
-        vararg query: Query
-): List<AggOrderBy> {
-    return this.orderBy(SQLOrderingSpecification.ASC, *query)
-}
-
-fun List<AggOrderBy>.orderByDesc(
-        vararg query: Query
-): List<AggOrderBy> {
-    return this.orderBy(SQLOrderingSpecification.DESC, *query)
-}

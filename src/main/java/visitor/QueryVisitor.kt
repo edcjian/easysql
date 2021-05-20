@@ -3,6 +3,7 @@ package visitor
 import com.alibaba.druid.DbType
 import com.alibaba.druid.sql.ast.SQLExpr
 import com.alibaba.druid.sql.ast.SQLOrderBy
+import com.alibaba.druid.sql.ast.SQLOver
 import com.alibaba.druid.sql.ast.expr.*
 import com.alibaba.druid.sql.ast.statement.SQLCharacterDataType
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource
@@ -50,6 +51,8 @@ fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
         is QueryBetween<*> -> visitQueryBetween(query, dbType)
 
         is QueryAllColumn -> visitQueryAllColumn(query)
+
+        is QueryOver -> visitQueryOver(query, dbType)
     }
 }
 
@@ -233,6 +236,28 @@ fun visitQueryAllColumn(query: QueryAllColumn): QueryExpr {
     }
 
     return QueryExpr(expr)
+}
+
+fun visitQueryOver(query: QueryOver, dbType: DB): QueryExpr {
+    val agg = visitQueryAggFunction(query.function, dbType).expr as SQLAggregateExpr
+
+    val over = SQLOver()
+    query.partitionBy.forEach { over.partitionBy.add(getQueryExpr(it, dbType).expr) }
+
+    if (query.orderBy.isNotEmpty()) {
+        val orderBy = SQLOrderBy()
+        query.orderBy.forEach {
+            val orderByItem = SQLSelectOrderByItem()
+            orderByItem.expr = getQueryExpr(it.query, dbType).expr
+            orderByItem.type = it.order
+            orderBy.addItem(orderByItem)
+        }
+        over.orderBy = orderBy
+    }
+
+    agg.over = over
+
+    return QueryExpr(agg, query.alias)
 }
 
 fun visitFunctionIfNull(query: QueryExprFunction, dbType: DB): QueryExpr {

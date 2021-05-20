@@ -1,6 +1,7 @@
 package expr
 
 import com.alibaba.druid.sql.ast.SQLExpr
+import com.alibaba.druid.sql.ast.SQLOrderBy
 import com.alibaba.druid.sql.ast.SQLOrderingSpecification
 import com.alibaba.druid.sql.ast.expr.SQLAggregateOption
 import dsl.const
@@ -117,6 +118,13 @@ data class QueryBetween<T>(
 ) : Query()
 
 data class QueryAllColumn(val owner: String? = null, override var alias: String? = null) : Query()
+
+data class QueryOver(
+    val function: QueryAggFunction,
+    val partitionBy: List<Query> = listOf(),
+    val orderBy: List<AggOrderBy> = listOf(),
+    override var alias: String? = null
+) : Query()
 
 data class CaseBranch<T>(val query: Query, val then: T)
 
