@@ -7,11 +7,16 @@ import com.alibaba.druid.sql.visitor.VisitorFeature
 import expr.DB
 import expr.Query
 import expr.TableSchema
+import query.ReviseQuery
 import visitor.getDbType
 import visitor.getQueryExpr
 import java.sql.Connection
 
-class Delete(var db: DB = DB.MYSQL, private var conn: Connection? = null, private var isTransaction: Boolean = false) {
+class Delete(
+    var db: DB = DB.MYSQL,
+    override var conn: Connection? = null,
+    override var isTransaction: Boolean = false
+) : ReviseQuery() {
     private var sqlDelete = SQLDeleteStatement()
 
     init {
@@ -48,24 +53,12 @@ class Delete(var db: DB = DB.MYSQL, private var conn: Connection? = null, privat
         return this
     }
 
-    fun sql(): String {
+    override fun sql(): String {
         return SQLUtils.toSQLString(
             sqlDelete,
             sqlDelete.dbType,
             SQLUtils.FormatOption(),
             VisitorFeature.OutputNameQuote
         )
-    }
-
-    override fun toString(): String {
-        return sql()
-    }
-
-    fun exec(): Int {
-        val result = database.exec(conn!!, this.sql())
-        if (!isTransaction) {
-            conn!!.close()
-        }
-        return result
     }
 }

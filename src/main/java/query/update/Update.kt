@@ -8,12 +8,17 @@ import com.alibaba.druid.sql.visitor.VisitorFeature
 import expr.DB
 import expr.Query
 import expr.TableSchema
+import query.ReviseQuery
 import visitor.getDbType
 import visitor.getExpr
 import visitor.getQueryExpr
 import java.sql.Connection
 
-class Update(var db: DB = DB.MYSQL, private var conn: Connection? = null, private var isTransaction: Boolean = false) {
+class Update(
+    var db: DB = DB.MYSQL,
+    override var conn: Connection? = null,
+    override var isTransaction: Boolean = false
+) : ReviseQuery() {
     private var sqlUpdate = SQLUpdateStatement()
 
     init {
@@ -120,24 +125,12 @@ class Update(var db: DB = DB.MYSQL, private var conn: Connection? = null, privat
         return this
     }
 
-    fun sql(): String {
+    override fun sql(): String {
         return SQLUtils.toSQLString(
             sqlUpdate,
             sqlUpdate.dbType,
             SQLUtils.FormatOption(),
             VisitorFeature.OutputNameQuote
         )
-    }
-
-    override fun toString(): String {
-        return sql()
-    }
-
-    fun exec(): Int {
-        val result = database.exec(conn!!, this.sql())
-        if (!isTransaction) {
-            conn!!.close()
-        }
-        return result
     }
 }

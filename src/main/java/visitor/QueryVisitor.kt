@@ -14,6 +14,7 @@ import dsl.getBinaryOperator
 import dsl.isNull
 import expr.*
 import java.math.BigDecimal
+import java.sql.SQLException
 import java.util.*
 
 fun getQueryExpr(query: Query?, dbType: DB): QueryExpr {
@@ -403,9 +404,8 @@ fun getDbType(dbType: DB): DbType {
     }
 }
 
-fun checkOLAP(dbType: DB): Boolean {
-    return when (dbType) {
-        DB.HIVE, DB.CLICKHOUSE -> true
-        else -> false
+fun checkOLAP(dbType: DB) {
+    if (dbType in listOf(DB.CLICKHOUSE, DB.HIVE)) {
+        throw SQLException("分析型数据库不支持此操作")
     }
 }

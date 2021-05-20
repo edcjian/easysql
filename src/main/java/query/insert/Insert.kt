@@ -8,12 +8,17 @@ import com.alibaba.druid.sql.visitor.VisitorFeature
 import expr.DB
 import expr.QueryTableColumn
 import expr.TableSchema
+import query.ReviseQuery
 import visitor.getDbType
 import visitor.getExpr
 import java.sql.Connection
 import kotlin.reflect.full.declaredMemberProperties
 
-class Insert(var db: DB = DB.MYSQL, private var conn: Connection? = null, private var isTransaction: Boolean = false) {
+class Insert(
+    var db: DB = DB.MYSQL,
+    override var conn: Connection? = null,
+    override var isTransaction: Boolean = false
+) : ReviseQuery() {
     private var sqlInsert = SQLInsertStatement()
 
     private var columns = mutableListOf<String>()
@@ -61,24 +66,12 @@ class Insert(var db: DB = DB.MYSQL, private var conn: Connection? = null, privat
         return this
     }
 
-    fun sql(): String {
+    override fun sql(): String {
         return SQLUtils.toSQLString(
             sqlInsert,
             sqlInsert.dbType,
             SQLUtils.FormatOption(),
             VisitorFeature.OutputNameQuote
         )
-    }
-
-    override fun toString(): String {
-        return sql()
-    }
-
-    fun exec(): Int {
-        val result = database.exec(conn!!, this.sql())
-        if (!isTransaction) {
-            conn!!.close()
-        }
-        return result
     }
 }
