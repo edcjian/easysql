@@ -19,12 +19,10 @@ class DBConnection(source: DataSource, override val db: DB) : DataBaseImpl() {
 
     private var dataSource: DataSource = source
 
-    fun getDataSource() = dataSource
-
     inline fun transaction(isolation: Int = TRANSACTION_READ_COMMITTED, query: DBTransaction.() -> Unit) {
         checkOLAP(this.db)
 
-        val conn = this.getDataSource().connection
+        val conn = getConnection()
         conn.autoCommit = false
         conn.transactionIsolation = isolation
         try {
