@@ -444,6 +444,11 @@ class Select(
         return join(table, null, null, SQLJoinTableSource.JoinType.FULL_OUTER_JOIN)
     }
 
+    fun forUpdate(): Select {
+        this.sqlSelect.isForUpdate = true
+        return this
+    }
+
     override fun sql(): String {
         if (sqlSelect.selectList.isEmpty()) {
             select()
@@ -467,7 +472,7 @@ class Select(
     fun <T : Any> find(clazz: Class<T>): T? {
         val selectCopy = this.sqlSelect.clone()
         val limit = SQLLimit()
-        limit.offset = selectCopy.limit.offset
+        selectCopy.limit?.offset?.let { limit.offset = it }
         limit.setRowCount(1)
         selectCopy.limit = limit
         val sql = SQLUtils.toSQLString(
@@ -512,7 +517,7 @@ class Select(
     inline fun <reified T> find(): T? {
         val selectCopy = getSqlSelect().clone()
         val limit = SQLLimit()
-        limit.offset = selectCopy.limit.offset
+        selectCopy.limit?.offset?.let { limit.offset = it }
         limit.setRowCount(1)
         selectCopy.limit = limit
         val sql = SQLUtils.toSQLString(
@@ -557,7 +562,7 @@ class Select(
     fun findMap(): Map<String, Any>? {
         val selectCopy = this.sqlSelect.clone()
         val limit = SQLLimit()
-        limit.offset = selectCopy.limit.offset
+        selectCopy.limit?.offset?.let { limit.offset = it }
         limit.setRowCount(1)
         selectCopy.limit = limit
         val sql = SQLUtils.toSQLString(
