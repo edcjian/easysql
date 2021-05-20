@@ -25,7 +25,7 @@ class DBConnection(source: DataSource, override val db: DB) : DataBaseImpl() {
         val conn = getConnection()
         conn.autoCommit = false
         isolation?.let { conn.transactionIsolation = it }
-        
+
         try {
             query(DBTransaction(this.db, conn))
             conn.commit()
