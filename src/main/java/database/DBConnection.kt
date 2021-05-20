@@ -9,13 +9,9 @@ import query.select.Select
 import query.truncate.Truncate
 import query.update.Update
 import visitor.checkOLAP
-import java.lang.Exception
-import java.sql.Connection
+import java.sql.Connection.TRANSACTION_READ_COMMITTED
 import java.sql.SQLException
 import javax.sql.DataSource
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
 
 class DBConnection(source: DataSource, var db: DB) {
     private var dataSource: DataSource = source
@@ -107,12 +103,13 @@ class DBConnection(source: DataSource, var db: DB) {
         return truncate
     }
 
-    infix fun transaction(query: DBTransaction.() -> Unit) {
+    fun transaction(isolation: Int = TRANSACTION_READ_COMMITTED, query: DBTransaction.() -> Unit) {
         if (checkOLAP(this.db)) {
             throw SQLException("分析型数据库不支持此操作")
         }
         val conn = this.dataSource.connection
         conn.autoCommit = false
+        conn.transactionIsolation = isolation
         try {
             query(DBTransaction(this.db, conn))
             conn.commit()
