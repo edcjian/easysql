@@ -13,6 +13,7 @@ import com.alibaba.druid.sql.visitor.VisitorFeature
 import dsl.column
 import dsl.count
 import expr.*
+import visitor.checkOLAP
 import visitor.getDbType
 import visitor.getQueryExpr
 import java.sql.Connection
@@ -445,6 +446,8 @@ class Select(
     }
 
     fun forUpdate(): Select {
+        checkOLAP(this.db)
+
         this.sqlSelect.isForUpdate = true
         return this
     }
