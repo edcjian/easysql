@@ -12,7 +12,10 @@ import query.ReviseQuery
 import visitor.getDbType
 import visitor.getExpr
 import java.sql.Connection
+import kotlin.reflect.KProperty
 import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.declaredMembers
+import kotlin.reflect.jvm.javaField
 
 class Insert(
     var db: DB = DB.MYSQL,
@@ -22,6 +25,10 @@ class Insert(
     private var sqlInsert = SQLInsertStatement()
 
     private var columns = mutableListOf<String>()
+
+    private var records = mutableListOf<Any>()
+
+    private var incrKey = ""
 
     init {
         sqlInsert.dbType = getDbType(db)
@@ -36,7 +43,12 @@ class Insert(
         val properties = declaredMemberProperties.map { it.name to it.getter.call(table) }
             .filter { it.second is QueryTableColumn }
             .map { it.first to it.second as QueryTableColumn }
-            .filter { !it.second.incr }
+            .filter {
+                if (it.second.incr) {
+                    incrKey = it.first
+                }
+                !it.second.incr
+            }
 
         properties.forEach {
             columns.add(it.first)
@@ -54,6 +66,8 @@ class Insert(
         val valuesClause = SQLInsertStatement.ValuesClause()
         values.forEach { valuesClause.addValue(getExpr(it)) }
         sqlInsert.addValueCause(valuesClause)
+
+        records.add(obj)
 
         return this
     }
@@ -79,12 +93,30 @@ class Insert(
         )
     }
 
-    fun execReturnObj(): Int {
-        // TODO 添加返回自增主键，测试没有自增主键的情况
+    override fun exec(): Int {
         val result = database.execReturnKey(conn!!, this.sql())
         if (!isTransaction) {
             conn!!.close()
         }
+
+        result.forEachIndexed { index, item ->
+            val clazz = records[index]::class
+            val field = (clazz.declaredMembers.find { it.name == incrKey } as KProperty).javaField
+            field?.isAccessible = true
+            val convert = convertIncrKey(item, field?.type?.typeName!!)
+            field.set(records[index], convert)
+            field.isAccessible = false
+        }
         return this.sqlInsert.valuesList.size
+    }
+
+    private fun convertIncrKey(key: Long, javaType: String): Any {
+        return when (javaType) {
+            "java.lang.Byte" -> key.toByte()
+            "java.lang.Short" -> key.toShort()
+            "java.lang.Integer" -> key.toInt()
+            "java.lang.Long" -> key
+            else -> key.toString()
+        }
     }
 }

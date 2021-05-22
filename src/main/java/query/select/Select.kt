@@ -512,6 +512,7 @@ class Select(
             val field = (rowClass.kotlin.declaredMembers.find { it.name == fieldName } as KProperty).javaField
             field?.isAccessible = true
             field?.set(row, map[column.key])
+            field?.isAccessible = false
         }
 
         return row
