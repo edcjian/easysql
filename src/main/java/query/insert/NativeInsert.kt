@@ -20,6 +20,8 @@ class NativeInsert(
 
     private var columns = mutableListOf<String>()
 
+    private var records = mutableListOf<MutableMap<String, Any>>()
+
     init {
         sqlInsert.dbType = getDbType(db)
     }
@@ -29,20 +31,14 @@ class NativeInsert(
         return this
     }
 
-    infix fun columns(columns: List<String>): NativeInsert {
-        columns.forEach {
-            this.columns.add(it)
-            this.sqlInsert.addColumn(SQLIdentifierExpr(it))
+    infix fun value(value: MutableMap<String, Any>): NativeInsert {
+        if (columns.isEmpty()) {
+            value.forEach {
+                sqlInsert.addColumn(SQLIdentifierExpr(it.key))
+                columns.add(it.key)
+            }
         }
 
-        return this
-    }
-
-    fun columns(vararg columns: String): NativeInsert {
-        return columns(columns.toList())
-    }
-
-    infix fun value(value: Map<String, Any>): NativeInsert {
         val valuesClause = SQLInsertStatement.ValuesClause()
 
         columns.forEach { col ->
@@ -50,10 +46,12 @@ class NativeInsert(
         }
         sqlInsert.addValueCause(valuesClause)
 
+        records.add(value)
+
         return this
     }
 
-    infix fun values(values: List<Map<String, Any>>): NativeInsert {
+    infix fun values(values: List<MutableMap<String, Any>>): NativeInsert {
         values.forEach {
             value(it)
         }
@@ -61,7 +59,7 @@ class NativeInsert(
         return this
     }
 
-    fun values(vararg values: Map<String, Any>): NativeInsert {
+    fun values(vararg values: MutableMap<String, Any>): NativeInsert {
         return values(values.toList())
     }
 
@@ -75,11 +73,14 @@ class NativeInsert(
     }
 
     override fun exec(): Int {
-        // TODO 添加返回自增主键，测试没有自增主键的情况
         val result = database.execReturnKey(conn!!, this.sql())
         if (!isTransaction) {
             conn!!.close()
         }
-        return this.sqlInsert.valuesList.size
+
+        result.forEachIndexed { index, item ->
+            records[index]["incrKey"] = item
+        }
+        return records.size
     }
 }

@@ -79,7 +79,7 @@ class Insert(
         )
     }
 
-    override fun exec(): Int {
+    fun execReturnObj(): Int {
         // TODO 添加返回自增主键，测试没有自增主键的情况
         val result = database.execReturnKey(conn!!, this.sql())
         if (!isTransaction) {
