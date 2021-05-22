@@ -5,6 +5,7 @@ import expr.TableSchema
 import query.delete.Delete
 import query.insert.Insert
 import query.insert.NativeInsert
+import query.select.NativeSelect
 import query.select.Select
 import query.truncate.Truncate
 import query.update.Update
@@ -32,6 +33,10 @@ abstract class DataBaseImpl : DataBase {
 
     fun select(): Select {
         return Select(db, getConnection(), isTransaction)
+    }
+
+    fun nativeSelect(sql: String): NativeSelect {
+        return NativeSelect(db, sql, getConnection(), isTransaction)
     }
 
     infix fun update(table: String): Update {
