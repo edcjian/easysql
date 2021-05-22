@@ -4,6 +4,7 @@ import expr.Query
 import expr.TableSchema
 import query.delete.Delete
 import query.insert.Insert
+import query.insert.NativeInsert
 import query.select.Select
 import query.truncate.Truncate
 import query.update.Update
@@ -49,10 +50,10 @@ abstract class DataBaseImpl : DataBase {
         return update
     }
 
-    infix fun insert(table: String): Insert {
+    infix fun insert(table: String): NativeInsert {
         checkOLAP(this.db)
 
-        val insert = Insert(db, getConnection(), isTransaction)
+        val insert = NativeInsert(db, getConnection(), isTransaction)
         insert.into(table)
         return insert
     }
