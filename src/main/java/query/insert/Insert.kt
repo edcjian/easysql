@@ -36,7 +36,7 @@ class Insert(
         val properties = declaredMemberProperties.map { it.name to it.getter.call(table) }
             .filter { it.second is QueryTableColumn }
             .map { it.first to it.second as QueryTableColumn }
-            .filter { it.second.incr == false }
+            .filter { !it.second.incr }
 
         properties.forEach {
             columns.add(it.first)
@@ -92,7 +92,7 @@ class Insert(
         return this
     }
 
-    fun naviteValue(vararg value: Any): Insert {
+    fun nativeValue(vararg value: Any): Insert {
         return nativeValue(value.toList())
     }
 
@@ -104,7 +104,7 @@ class Insert(
         return this
     }
 
-    fun naviteValues(vararg value: List<Any>): Insert {
+    fun nativeValues(vararg value: List<Any>): Insert {
         return nativeValues(value.toList())
     }
 
@@ -119,10 +119,10 @@ class Insert(
 
     override fun exec(): Int {
         // TODO 添加返回自增主键，测试没有自增主键的情况
-        val result = database.exec(conn!!, this.sql())
+        val result = database.execReturnKey(conn!!, this.sql())
         if (!isTransaction) {
             conn!!.close()
         }
-        return result
+        return this.sqlInsert.valuesList.size
     }
 }

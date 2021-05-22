@@ -74,7 +74,7 @@ fun execReturnKey(conn: Connection, sql: String): List<Any> {
     try {
         stmt = conn.createStatement()
         stmt.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS)
-        val resultSet = stmt.getGeneratedKeys()
+        val resultSet = stmt.generatedKeys
         while (resultSet.next()) {
             result += resultSet.getObject(1)
         }
