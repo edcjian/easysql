@@ -49,15 +49,15 @@ abstract class DataBaseImpl : DataBase {
         return update
     }
 
-    infix fun insert(table: TableSchema): Insert {
+    infix fun insert(table: String): Insert {
         checkOLAP(this.db)
 
         val insert = Insert(db, getConnection(), isTransaction)
         insert.into(table)
         return insert
     }
-    
-    infix fun insert(table: String): Insert {
+
+    infix fun insert(table: TableSchema): Insert {
         checkOLAP(this.db)
 
         val insert = Insert(db, getConnection(), isTransaction)
