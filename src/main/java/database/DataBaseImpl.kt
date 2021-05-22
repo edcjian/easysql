@@ -56,6 +56,14 @@ abstract class DataBaseImpl : DataBase {
         insert.into(table)
         return insert
     }
+    
+    infix fun insert(table: String): Insert {
+        checkOLAP(this.db)
+
+        val insert = Insert(db, getConnection(), isTransaction)
+        insert.into(table)
+        return insert
+    }
 
     infix fun delete(table: String): Delete {
         checkOLAP(this.db)

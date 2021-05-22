@@ -46,7 +46,25 @@ class Insert(
         return this
     }
 
-    infix fun values(obj: Any): Insert {
+    infix fun into(table: String): Insert {
+        sqlInsert.tableSource = SQLExprTableSource(table)
+        return this
+    }
+
+    infix fun columns(columns: List<String>): Insert {
+        columns.forEach {
+            this.columns.add(it)
+            this.sqlInsert.addColumn(SQLIdentifierExpr(it))
+        }
+
+        return this
+    }
+
+    fun columns(vararg columns: String): Insert {
+        return columns(*columns)
+    }
+
+    infix fun value(obj: Any): Insert {
         val clazz = obj::class
         val properties = clazz.declaredMemberProperties.map { it.name to it.getter.call(obj) }.toMap()
         val values = columns.map { properties[it] }
@@ -60,10 +78,34 @@ class Insert(
 
     infix fun values(objList: List<Any>): Insert {
         objList.forEach {
-            values(it)
+            value(it)
         }
 
         return this
+    }
+
+    infix fun nativeValue(value: List<Any>): Insert {
+        val valuesClause = SQLInsertStatement.ValuesClause()
+        value.forEach { valuesClause.addValue(getExpr(it)) }
+        sqlInsert.addValueCause(valuesClause)
+
+        return this
+    }
+
+    fun naviteValue(vararg value: Any): Insert {
+        return nativeValue(value.toList())
+    }
+
+    infix fun nativeValues(values: List<List<Any>>): Insert {
+        values.forEach {
+            nativeValue(it)
+        }
+
+        return this
+    }
+
+    fun naviteValues(vararg value: List<Any>): Insert {
+        return nativeValues(value.toList())
     }
 
     override fun sql(): String {
@@ -73,5 +115,14 @@ class Insert(
             SQLUtils.FormatOption(),
             VisitorFeature.OutputNameQuote
         )
+    }
+
+    override fun exec(): Int {
+        // TODO 添加返回自增主键，测试没有自增主键的情况
+        val result = database.exec(conn!!, this.sql())
+        if (!isTransaction) {
+            conn!!.close()
+        }
+        return result
     }
 }

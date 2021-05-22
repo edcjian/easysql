@@ -1,7 +1,7 @@
 package query
 
 abstract class ReviseQuery : BasedQuery {
-    fun exec(): Int {
+    open fun exec(): Int {
         val result = database.exec(conn!!, this.sql())
         if (!isTransaction) {
             conn!!.close()
