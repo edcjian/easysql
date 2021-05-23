@@ -3,6 +3,7 @@ package database
 import expr.Query
 import expr.TableSchema
 import query.ddl.CreateIndex
+import query.ddl.CreateTable
 import query.ddl.DropIndex
 import query.ddl.DropTable
 import query.delete.Delete
@@ -121,6 +122,12 @@ abstract class DataBaseImpl : DataBase {
         val dropIndex = DropIndex(db, getConnection(), isTransaction)
         dropIndex.drop(indexName)
         return dropIndex
+    }
+
+    infix fun createTable(table: String): CreateTable {
+        val createTable = CreateTable(db, getConnection(), isTransaction)
+        createTable.create(table)
+        return createTable
     }
 
     infix fun createIndex(indexName: String): CreateIndex {
