@@ -2,6 +2,7 @@ package database
 
 import expr.Query
 import expr.TableSchema
+import query.ddl.DropTable
 import query.delete.Delete
 import query.insert.Insert
 import query.insert.NativeInsert
@@ -101,5 +102,17 @@ abstract class DataBaseImpl : DataBase {
         val truncate = Truncate(db, getConnection(), isTransaction)
         truncate.truncate(table)
         return truncate
+    }
+
+    infix fun dropTable(table: String): DropTable {
+        val dropTable = DropTable(db, getConnection(), isTransaction)
+        dropTable.drop(table)
+        return dropTable
+    }
+
+    infix fun dropTable(table: TableSchema): DropTable {
+        val dropTable = DropTable(db, getConnection(), isTransaction)
+        dropTable.drop(table)
+        return dropTable
     }
 }
