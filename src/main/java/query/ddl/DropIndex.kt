@@ -32,11 +32,6 @@ class DropIndex(
         return this
     }
 
-    infix fun on(table: TableSchema): DropIndex {
-        sqlDropIndex.tableName = SQLExprTableSource(table.tableName)
-        return this
-    }
-
     override fun sql(): String {
         return SQLUtils.toSQLString(
             sqlDropIndex,

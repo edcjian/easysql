@@ -26,11 +26,6 @@ class DropTable(
         return this
     }
 
-    infix fun drop(table: TableSchema): DropTable {
-        sqlDropTable.setName(SQLIdentifierExpr(table.tableName))
-        return this
-    }
-
     override fun sql(): String {
         return SQLUtils.toSQLString(
             sqlDropTable,
