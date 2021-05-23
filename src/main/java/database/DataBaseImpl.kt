@@ -2,6 +2,7 @@ package database
 
 import expr.Query
 import expr.TableSchema
+import query.ddl.DropIndex
 import query.ddl.DropTable
 import query.delete.Delete
 import query.insert.Insert
@@ -119,5 +120,11 @@ abstract class DataBaseImpl : DataBase {
         val dropTable = DropTable(db, getConnection(), isTransaction)
         dropTable.drop(table)
         return dropTable
+    }
+
+    infix fun dropIndex(indexName: String): DropIndex {
+        val dropIndex = DropIndex(db, getConnection(), isTransaction)
+        dropIndex.drop(indexName)
+        return dropIndex
     }
 }
