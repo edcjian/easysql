@@ -14,6 +14,12 @@ import visitor.checkOLAP
 import java.sql.SQLException
 
 abstract class DataBaseImpl : DataBase {
+    fun select(vararg columns: String): Select {
+        val select = Select(db, getConnection(), isTransaction)
+        select.select(*columns)
+        return select
+    }
+
     infix fun select(query: Query): Select {
         val select = Select(db, getConnection(), isTransaction)
         select.invoke(query)
