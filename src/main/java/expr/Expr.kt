@@ -1,7 +1,6 @@
 package expr
 
 import com.alibaba.druid.sql.ast.SQLExpr
-import com.alibaba.druid.sql.ast.SQLOrderBy
 import com.alibaba.druid.sql.ast.SQLOrderingSpecification
 import com.alibaba.druid.sql.ast.expr.SQLAggregateOption
 import dsl.const

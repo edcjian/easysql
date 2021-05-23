@@ -5,12 +5,10 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectQuery
 import com.alibaba.druid.sql.ast.statement.SQLUnionOperator
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery
 import com.alibaba.druid.sql.visitor.VisitorFeature
-import expr.DB
-import database.DBConnection
 import dsl.alias
 import dsl.count
+import expr.DB
 import visitor.getDbType
-import visitor.getQueryExpr
 import java.sql.Connection
 
 class UnionSelect(

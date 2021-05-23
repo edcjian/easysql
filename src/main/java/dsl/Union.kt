@@ -2,7 +2,6 @@ package dsl
 
 import com.alibaba.druid.sql.ast.statement.SQLUnionOperator
 import query.select.SelectQuery
-import query.select.SelectQueryImpl
 import query.select.UnionSelect
 
 infix fun SelectQuery.union(select: SelectQuery): UnionSelect {

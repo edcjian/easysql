@@ -11,7 +11,6 @@ import query.select.Select
 import query.truncate.Truncate
 import query.update.Update
 import visitor.checkOLAP
-import java.sql.SQLException
 
 abstract class DataBaseImpl : DataBase {
     fun select(vararg columns: String): Select {
